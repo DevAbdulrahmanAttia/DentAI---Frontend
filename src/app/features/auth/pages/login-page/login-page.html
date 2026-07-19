@@ -1,0 +1,79 @@
+<div class="login-wrap">
+  <div class="login-art">
+    <div class="brand">
+      <app-logo size="lg" />
+    </div>
+
+    <app-molar-scanner />
+
+    <div>
+      <p class="quote">DentAI turns four weeks of attendance history into <b>one risk score per patient</b> — filling cancelled slots before the chair goes cold.</p>
+      <div class="stats">
+        <div><div class="num">−31%</div><div class="lbl">no-show rate</div></div>
+        <div><div class="num">3.2×</div><div class="lbl">slots recovered</div></div>
+        <div><div class="num">99.9%</div><div class="lbl">uptime SLA</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="login-form-side">
+    <div class="login-card">
+      <div class="eyebrow">Clinic sign in</div>
+      <h1>Welcome back</h1>
+      <div class="sub">Sign in to manage your clinic's schedule, patients, and inventory.</div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="role-select" aria-label="Select login role">
+          @for (role of roles; track role) {
+            <button
+              type="button"
+              class="role-chip"
+              [class.sel]="loginForm.get('role')?.value === role"
+              (click)="selectRole(role)"
+              [disabled]="loading()"
+            >
+              {{ role }}
+            </button>
+          }
+        </div>
+
+        @if (errorMessage()) {
+          <div class="general-error" role="alert">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <app-input-field
+          formControlName="email"
+          label="Email address"
+          type="email"
+          placeholder="you@clinic.com"
+          [hasError]="!!(loginForm.get('email')?.touched && loginForm.get('email')?.invalid)"
+          [errorMessage]="loginForm.get('email')?.hasError('required') ? 'Email is required' : loginForm.get('email')?.hasError('email') ? 'Please enter a valid email' : ''"
+        />
+
+        <app-input-field
+          formControlName="password"
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          [hasError]="!!(loginForm.get('password')?.touched && loginForm.get('password')?.invalid)"
+          [errorMessage]="loginForm.get('password')?.hasError('required') ? 'Password is required' : ''"
+        />
+
+        <div class="row-between">
+          <label class="checkbox-line">
+            <input type="checkbox" formControlName="rememberMe"> Keep me signed in
+          </label>
+          <a class="link" routerLink="/auth/forgot">Forgot password?</a>
+        </div>
+
+        <app-button type="submit" variant="primary" [loading]="loading()">
+          Sign in
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </app-button>
+      </form>
+      <div class="divider-note">Need an account? Ask your clinic owner to invite you.</div>
+    </div>
+  </div>
+</div>

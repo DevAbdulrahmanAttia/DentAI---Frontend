@@ -1,21 +1,29 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @import 'tailwindcss';
 
 @theme {
-  --color-primary: #0284c7;
-  --color-primary-hover: #0369a1;
-  --color-secondary: #0ea5e9;
-  --color-background: #f8fafc;
-  --color-background-muted: #f1f5f9;
-  --color-surface: #ffffff;
-  --color-text: #0f172a;
-  --color-text-muted: #64748b;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
+  --color-navy: #0f2a47;
+  --color-navy-deep: #0a1d33;
+  --color-teal: #0e7c86;
+  --color-teal-light: #e3f1f2;
+  --color-teal-dim: #b7dcdf;
+  --color-background: #f5f8f9;
+  --color-card: #ffffff;
+  --color-text: #16202b;
+  --color-mute: #5c6b78;
+  --color-faint: #8a96a1;
+  --color-border: #e1e7ea;
+  --color-amber: #b7791f;
+  --color-amber-bg: #fbf3e1;
+  --color-red: #c4433d;
+  --color-red-bg: #fbeae9;
+  --color-green: #2e8b57;
+  --color-green-bg: #e9f5ee;
 
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 @layer base {
@@ -27,3 +35,4 @@
     padding: 0;
   }
 }
+

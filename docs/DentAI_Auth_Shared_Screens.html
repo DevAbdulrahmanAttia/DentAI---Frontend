@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DentAI — Authentication &amp; Shared Screens</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root{
+  --navy:#0F2A47;
+  --navy-deep:#0A1D33;
+  --teal:#0E7C86;
+  --teal-light:#E3F1F2;
+  --teal-dim:#B7DCDF;
+  --bg:#F5F8F9;
+  --card:#FFFFFF;
+  --text:#16202B;
+  --mute:#5C6B78;
+  --faint:#8A96A1;
+  --border:#E1E7EA;
+  --amber:#B7791F;
+  --amber-bg:#FBF3E1;
+  --red:#C4433D;
+  --red-bg:#FBEAE9;
+  --green:#2E8B57;
+  --green-bg:#E9F5EE;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
+h1,h2,h3,.disp{font-family:'Space Grotesk',sans-serif;}
+.mono{font-family:'JetBrains Mono',monospace;}
+
+/* ---------- viewer chrome (not part of the product) ---------- */
+.viewer-bar{
+  position:sticky; top:0; z-index:100;
+  background:var(--navy-deep);
+  display:flex; align-items:center; gap:6px;
+  padding:10px 18px; flex-wrap:wrap;
+}
+.viewer-bar .vlabel{color:#8CA3B5; font-size:11px; letter-spacing:.06em; text-transform:uppercase; margin-right:8px; font-family:'JetBrains Mono',monospace;}
+.viewer-bar button{
+  background:transparent; border:1px solid #2A4560; color:#B9C7D3;
+  padding:7px 14px; border-radius:20px; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:500;
+  cursor:pointer; transition:all .15s ease;
+}
+.viewer-bar button:hover{border-color:var(--teal); color:#fff;}
+.viewer-bar button.active{background:var(--teal); border-color:var(--teal); color:#fff;}
+
+.screen{ display:none; min-height:calc(100vh - 48px); }
+.screen.active{ display:block; }
+
+/* ================= LOGIN ================= */
+.login-wrap{ display:grid; grid-template-columns:1.05fr 1fr; min-height:calc(100vh - 48px); }
+.login-art{
+  position:relative; overflow:hidden;
+  background:radial-gradient(120% 130% at 20% 15%, #123A5E 0%, var(--navy-deep) 55%, #08141F 100%);
+  display:flex; flex-direction:column; justify-content:space-between;
+  padding:56px;
+}
+.login-art .brand{ display:flex; align-items:center; gap:10px; }
+.login-art .brand svg{ width:34px; height:34px; }
+.login-art .brand .wordmark{ font-size:23px; font-weight:700; color:#fff; letter-spacing:-.01em; }
+.login-art .brand .wordmark span{ color:var(--teal-dim); }
+
+.scan-stage{ position:relative; flex:1; display:flex; align-items:center; justify-content:center; }
+.molar{ width:230px; height:230px; opacity:.92; }
+.scanline{
+  position:absolute; left:8%; right:8%; height:2px;
+  background:linear-gradient(90deg, rgba(14,124,134,0) 0%, #4FD2DE 50%, rgba(14,124,134,0) 100%);
+  box-shadow:0 0 18px 2px rgba(79,210,222,.55);
+  animation:sweep 3.4s cubic-bezier(.65,0,.35,1) infinite;
+}
+@keyframes sweep{
+  0%{ top:18%; opacity:0; }
+  8%{ opacity:1; }
+  50%{ top:82%; opacity:1; }
+  58%{ opacity:0; }
+  100%{ top:82%; opacity:0; }
+}
+.readout{ position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); text-align:center; }
+.readout .conf{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--teal-dim); letter-spacing:.04em; }
+
+.login-art .quote{ color:#C7D6E1; font-size:15px; line-height:1.6; max-width:380px; }
+.login-art .quote b{ color:#fff; }
+.login-art .stats{ display:flex; gap:28px; margin-top:18px; }
+.login-art .stats div{ display:flex; flex-direction:column; }
+.login-art .stats .num{ font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:#fff; }
+.login-art .stats .lbl{ font-size:11.5px; color:#8CA3B5; margin-top:2px; }
+
+.login-form-side{ display:flex; align-items:center; justify-content:center; padding:56px; background:var(--bg); }
+.login-card{ width:100%; max-width:380px; }
+.login-card .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); margin-bottom:10px; }
+.login-card h1{ font-size:28px; margin:0 0 6px; color:var(--navy); font-weight:700; letter-spacing:-.01em; }
+.login-card .sub{ color:var(--mute); font-size:14.5px; margin-bottom:32px; }
+
+.field{ margin-bottom:18px; }
+.field label{ display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:7px; }
+.field input{
+  width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:9px;
+  font-size:14.5px; font-family:'Inter',sans-serif; color:var(--text); background:#fff;
+  transition:border-color .15s;
+}
+.field input:focus{ outline:none; border-color:var(--teal); }
+.row-between{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+.checkbox-line{ display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--mute); }
+.checkbox-line input{ width:15px; height:15px; accent-color:var(--teal); }
+.link{ color:var(--teal); font-size:13.5px; font-weight:600; text-decoration:none; cursor:pointer; }
+.link:hover{ text-decoration:underline; }
+
+.btn-primary{
+  width:100%; padding:13px; border-radius:9px; border:none; background:var(--navy);
+  color:#fff; font-size:15px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition:background .15s;
+}
+.btn-primary:hover{ background:var(--teal); }
+
+.role-select{ display:flex; gap:8px; margin-bottom:22px; }
+.role-chip{ flex:1; text-align:center; padding:9px 6px; border-radius:8px; border:1.5px solid var(--border); font-size:12.5px; font-weight:600; color:var(--mute); cursor:pointer; }
+.role-chip.sel{ border-color:var(--teal); background:var(--teal-light); color:var(--teal); }
+
+.divider-note{ text-align:center; margin-top:26px; font-size:13px; color:var(--faint); }
+
+/* ================= FORGOT PASSWORD ================= */
+.center-stage{ min-height:calc(100vh - 48px); display:flex; align-items:center; justify-content:center; background:
+  radial-gradient(80% 60% at 50% 0%, var(--teal-light) 0%, var(--bg) 60%); padding:40px; }
+.fp-card{ width:100%; max-width:420px; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:40px; box-shadow:0 20px 45px -25px rgba(15,42,71,.35); }
+.fp-icon{ width:52px; height:52px; border-radius:14px; background:var(--teal-light); display:flex; align-items:center; justify-content:center; margin-bottom:22px; }
+.fp-card h1{ font-size:22px; margin:0 0 8px; color:var(--navy); }
+.fp-card .sub{ color:var(--mute); font-size:14px; line-height:1.55; margin-bottom:28px; }
+.fp-card .sub b{ color:var(--text); }
+.step-track{ display:flex; align-items:center; gap:6px; margin-bottom:26px; }
+.step-dot{ width:8px; height:8px; border-radius:50%; background:var(--border); }
+.step-dot.on{ background:var(--teal); width:22px; border-radius:5px; }
+.otp-row{ display:flex; gap:9px; margin-bottom:22px; }
+.otp-row input{ width:100%; text-align:center; font-family:'JetBrains Mono',monospace; font-size:19px; padding:12px 0; border-radius:9px; border:1.5px solid var(--border); }
+.otp-row input:nth-child(1){ border-color:var(--teal); }
+.resend{ text-align:center; font-size:13px; color:var(--faint); margin-top:18px; }
+
+/* ================= SHELL ================= */
+.shell{ display:grid; grid-template-columns:250px 1fr; min-height:calc(100vh - 48px); }
+.sidebar{ background:var(--navy-deep); padding:22px 16px; display:flex; flex-direction:column; }
+.sidebar .brand{ display:flex; align-items:center; gap:9px; padding:6px 8px 26px; }
+.sidebar .brand svg{ width:24px; height:24px; }
+.sidebar .brand .wordmark{ font-size:17px; font-weight:700; color:#fff; }
+.sidebar .brand .wordmark span{ color:var(--teal-dim); }
+.nav-group-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:#5E7285; padding:14px 10px 8px; }
+.nav-item{ display:flex; align-items:center; gap:11px; padding:10px 11px; border-radius:8px; color:#B9C7D3; font-size:13.5px; font-weight:500; margin-bottom:2px; cursor:pointer; }
+.nav-item svg{ width:17px; height:17px; flex-shrink:0; opacity:.85; }
+.nav-item:hover{ background:#152F49; color:#fff; }
+.nav-item.active{ background:var(--teal); color:#fff; }
+.nav-item.active svg{ opacity:1; }
+.nav-item .badge{ margin-left:auto; background:var(--red); color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; }
+.sidebar-foot{ margin-top:auto; padding-top:16px; border-top:1px solid #1D3852; display:flex; align-items:center; gap:10px; }
+.avatar-sm{ width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--teal),#0A5259); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:13px; }
+.sidebar-foot .who{ font-size:12.5px; color:#fff; font-weight:600; }
+.sidebar-foot .role{ font-size:11px; color:#8CA3B5; }
+
+.main-col{ display:flex; flex-direction:column; }
+.topbar{ height:64px; background:#fff; border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 26px; gap:16px; }
+.search-box{ flex:1; max-width:360px; display:flex; align-items:center; gap:9px; background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:8px 12px; color:var(--faint); font-size:13.5px; }
+.search-box svg{ width:15px; height:15px; }
+.topbar-right{ margin-left:auto; display:flex; align-items:center; gap:18px; }
+.bell-wrap{ position:relative; width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; background:var(--bg); cursor:pointer; }
+.bell-wrap svg{ width:18px; height:18px; color:var(--navy); }
+.bell-dot{ position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:50%; background:var(--red); border:2px solid #fff; }
+.profile-mini{ display:flex; align-items:center; gap:9px; cursor:pointer; }
+.profile-mini .name{ font-size:13px; font-weight:600; color:var(--text); }
+.profile-mini .role{ font-size:11px; color:var(--faint); }
+
+.content{ padding:26px; flex:1; }
+.content h2{ font-size:20px; color:var(--navy); margin:0 0 4px; }
+.content .lede{ color:var(--mute); font-size:13.5px; margin-bottom:22px; }
+.kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.kpi-card{ background:#fff; border:1px solid var(--border); border-radius:12px; padding:18px; }
+.kpi-card .lbl{ font-size:12px; color:var(--mute); font-weight:500; }
+.kpi-card .val{ font-family:'Space Grotesk',sans-serif; font-size:26px; font-weight:700; color:var(--navy); margin-top:6px; }
+.kpi-card .delta{ font-size:12px; margin-top:6px; font-weight:600; }
+.kpi-card .delta.up{ color:var(--green); }
+.kpi-card .delta.warn{ color:var(--amber); }
+.panel{ background:#fff; border:1px solid var(--border); border-radius:12px; padding:20px; }
+.panel-row{ display:flex; align-items:center; padding:11px 0; border-bottom:1px solid var(--border); font-size:13.5px; }
+.panel-row:last-child{ border-bottom:none; }
+.dot-status{ width:8px; height:8px; border-radius:50%; margin-right:11px; }
+
+/* ================= NOTIFICATIONS ================= */
+.notif-panel-wrap{ position:absolute; top:64px; right:26px; width:380px; background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow:0 22px 50px -22px rgba(15,42,71,.4); overflow:hidden; z-index:5; }
+.notif-head{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--border); }
+.notif-head h3{ font-size:15px; margin:0; color:var(--navy); }
+.notif-head .mark{ font-size:12px; color:var(--teal); font-weight:600; cursor:pointer; }
+.notif-tabs{ display:flex; gap:6px; padding:10px 18px 0; }
+.ntab{ font-size:12px; padding:6px 12px; border-radius:20px; color:var(--mute); font-weight:600; cursor:pointer; }
+.ntab.on{ background:var(--teal-light); color:var(--teal); }
+.notif-list{ max-height:420px; overflow:auto; }
+.notif-item{ display:flex; gap:12px; padding:14px 18px; border-bottom:1px solid #EFF2F4; cursor:pointer; }
+.notif-item:hover{ background:var(--bg); }
+.notif-item.unread{ background:#F7FBFB; }
+.n-icon{ width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.n-icon svg{ width:17px; height:17px; }
+.n-body{ flex:1; min-width:0; }
+.n-title{ font-size:13px; font-weight:600; color:var(--text); }
+.n-desc{ font-size:12.5px; color:var(--mute); margin-top:2px; line-height:1.4; }
+.n-time{ font-size:11px; color:var(--faint); margin-top:5px; }
+.n-unread-dot{ width:7px; height:7px; border-radius:50%; background:var(--teal); flex-shrink:0; margin-top:5px; }
+
+/* ================= PROFILE & SETTINGS ================= */
+.settings-grid{ display:grid; grid-template-columns:220px 1fr; gap:26px; }
+.settings-nav{ display:flex; flex-direction:column; gap:2px; }
+.settings-nav .sitem{ padding:10px 12px; border-radius:8px; font-size:13.5px; font-weight:500; color:var(--mute); cursor:pointer; }
+.settings-nav .sitem.on{ background:var(--teal-light); color:var(--teal); font-weight:700; }
+.settings-panel{ background:#fff; border:1px solid var(--border); border-radius:12px; padding:28px; max-width:640px; }
+.settings-panel h3{ font-size:16px; color:var(--navy); margin:0 0 4px; }
+.settings-panel .desc{ font-size:13px; color:var(--mute); margin-bottom:24px; }
+.avatar-upload{ display:flex; align-items:center; gap:16px; margin-bottom:26px; }
+.avatar-lg{ width:66px; height:66px; border-radius:50%; background:linear-gradient(135deg,var(--teal),#0A5259); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:22px; }
+.btn-ghost{ padding:9px 16px; border-radius:8px; border:1.5px solid var(--border); background:#fff; color:var(--text); font-size:13px; font-weight:600; cursor:pointer; }
+.field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.field-grid .field{ margin-bottom:16px; }
+.field input[disabled]{ background:var(--bg); color:var(--faint); }
+.toggle-row{ display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid var(--border); }
+.toggle-row:last-child{ border-bottom:none; }
+.toggle-row .t-title{ font-size:13.5px; font-weight:600; color:var(--text); }
+.toggle-row .t-desc{ font-size:12px; color:var(--mute); margin-top:2px; }
+.switch{ width:40px; height:23px; border-radius:20px; background:var(--border); position:relative; cursor:pointer; flex-shrink:0; }
+.switch.on{ background:var(--teal); }
+.switch::after{ content:''; position:absolute; width:17px; height:17px; border-radius:50%; background:#fff; top:3px; left:3px; transition:left .15s; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+.switch.on::after{ left:20px; }
+.save-bar{ display:flex; gap:10px; margin-top:26px; padding-top:22px; border-top:1px solid var(--border); }
+.btn-save{ padding:10px 20px; border-radius:8px; border:none; background:var(--navy); color:#fff; font-size:13.5px; font-weight:600; cursor:pointer; }
+.badge-role{ display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; background:var(--teal-light); color:var(--teal); }
+</style>
+</head>
+<body>
+
+<div class="viewer-bar">
+  <span class="vlabel">4.1 Preview</span>
+  <button class="active" onclick="show('login')">Login</button>
+  <button onclick="show('forgot')">Forgot / Reset Password</button>
+  <button onclick="show('shell')">Main Layout (Shell)</button>
+  <button onclick="show('notif')">Notifications / Alerts</button>
+  <button onclick="show('profile')">Profile &amp; Settings</button>
+</div>
+
+<!-- ================= LOGIN ================= -->
+<div class="screen active" id="screen-login">
+  <div class="login-wrap">
+    <div class="login-art">
+      <div class="brand">
+        <svg viewBox="0 0 40 40" fill="none"><path d="M20 4c-4.5 0-7 2.6-9.2 2.6-2.6 0-4.3-1.6-4.3 3 0 7 2.4 15 5.6 19.8 1.6 2.4 3 3.6 4 3.6.9 0 1.3-1 1.9-3.4.5-2 1-3.4 2-3.4s1.5 1.4 2 3.4c.6 2.4 1 3.4 1.9 3.4 1 0 2.4-1.2 4-3.6C31.2 24.6 33.6 16.6 33.6 9.6c0-4.6-1.7-3-4.3-3C27.1 6.6 24.5 4 20 4z" fill="#0E7C86"/></svg>
+        <div class="wordmark">Dent<span>AI</span></div>
+      </div>
+
+      <div class="scan-stage">
+        <svg class="molar" viewBox="0 0 200 200" fill="none">
+          <path d="M100 22c-22 0-34 13-46 13-13 0-21-8-21 15 0 35 12 75 28 99 8 12 15 18 20 18 4.5 0 6.5-5 9.5-17 2.5-10 5-17 10-17s7.5 7 10 17c3 12 5 17 9.5 17 5 0 12-6 20-18 16-24 28-64 28-99 0-23-8-15-21-15-12 0-24-13-46-13z" stroke="#2F5A79" stroke-width="1.5" fill="#123A5E"/>
+          <path d="M100 22c-22 0-34 13-46 13-13 0-21-8-21 15 0 35 12 75 28 99 8 12 15 18 20 18 4.5 0 6.5-5 9.5-17 2.5-10 5-17 10-17s7.5 7 10 17c3 12 5 17 9.5 17 5 0 12-6 20-18 16-24 28-64 28-99 0-23-8-15-21-15-12 0-24-13-46-13z" stroke="#4FD2DE" stroke-width=".5" fill="none" opacity=".5"/>
+        </svg>
+        <div class="scanline"></div>
+        <div class="readout"><div class="conf">ANALYSIS · CONFIDENCE 94.2%</div></div>
+      </div>
+
+      <div>
+        <p class="quote">DentAI turns four weeks of attendance history into <b>one risk score per patient</b> — filling cancelled slots before the chair goes cold.</p>
+        <div class="stats">
+          <div><div class="num">−31%</div><div class="lbl">no-show rate</div></div>
+          <div><div class="num">3.2×</div><div class="lbl">slots recovered</div></div>
+          <div><div class="num">99.9%</div><div class="lbl">uptime SLA</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-form-side">
+      <div class="login-card">
+        <div class="eyebrow">Clinic sign in</div>
+        <h1>Welcome back</h1>
+        <div class="sub">Sign in to manage your clinic's schedule, patients, and inventory.</div>
+
+        <div class="role-select">
+          <div class="role-chip sel">Owner</div>
+          <div class="role-chip">Doctor</div>
+          <div class="role-chip">Reception</div>
+        </div>
+
+        <div class="field">
+          <label>Email address</label>
+          <input type="email" placeholder="you@clinic.com" value="dr.amina@brightsmile.clinic">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" placeholder="••••••••" value="••••••••••">
+        </div>
+        <div class="row-between">
+          <label class="checkbox-line"><input type="checkbox" checked> Keep me signed in</label>
+          <span class="link" onclick="show('forgot')">Forgot password?</span>
+        </div>
+        <button class="btn-primary">
+          Sign in
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <div class="divider-note">Need an account? Ask your clinic owner to invite you.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= FORGOT PASSWORD ================= -->
+<div class="screen" id="screen-forgot">
+  <div class="center-stage">
+    <div class="fp-card">
+      <div class="step-track">
+        <div class="step-dot on"></div><div class="step-dot on"></div><div class="step-dot"></div>
+      </div>
+      <div class="fp-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0E7C86" stroke-width="2"><rect x="3" y="10" width="18" height="11" rx="2"/><path d="M7 10V7a5 5 0 0110 0v3"/></svg>
+      </div>
+      <h1>Enter the code we sent</h1>
+      <div class="sub">We texted a 6-digit code to <b>+20 100 •••• 812</b> on WhatsApp. Enter it below to reset your password.</div>
+      <div class="otp-row">
+        <input maxlength="1" value="4"><input maxlength="1" value="8"><input maxlength="1" value="2"><input maxlength="1"><input maxlength="1"><input maxlength="1">
+      </div>
+      <div class="field">
+        <label>New password</label>
+        <input type="password" placeholder="Minimum 8 characters">
+      </div>
+      <button class="btn-primary">Reset password</button>
+      <div class="resend">Didn't get it? <span class="link">Resend code</span> · 00:42</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SHELL ================= -->
+<div class="screen" id="screen-shell">
+  <div class="shell">
+    <div class="sidebar">
+      <div class="brand">
+        <svg viewBox="0 0 40 40" fill="none"><path d="M20 4c-4.5 0-7 2.6-9.2 2.6-2.6 0-4.3-1.6-4.3 3 0 7 2.4 15 5.6 19.8 1.6 2.4 3 3.6 4 3.6.9 0 1.3-1 1.9-3.4.5-2 1-3.4 2-3.4s1.5 1.4 2 3.4c.6 2.4 1 3.4 1.9 3.4 1 0 2.4-1.2 4-3.6C31.2 24.6 33.6 16.6 33.6 9.6c0-4.6-1.7-3-4.3-3C27.1 6.6 24.5 4 20 4z" fill="#0E7C86"/></svg>
+        <div class="wordmark">Dent<span>AI</span></div>
+      </div>
+
+      <div class="nav-group-label">Overview</div>
+      <div class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Appointments</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>Patients</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Waitlist<span class="badge">3</span></div>
+
+      <div class="nav-group-label">Clinic</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V5a2 2 0 00-2-2H5a2 2 0 00-2 2v3M3 8h18v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8zM8 12h.01M12 12h.01"/></svg>Inventory</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-6 4 3 4-8"/></svg>Analytics</div>
+
+      <div class="nav-group-label">System</div>
+      <div class="nav-item" onclick="show('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>Settings</div>
+
+      <div class="sidebar-foot">
+        <div class="avatar-sm">AH</div>
+        <div>
+          <div class="who">Dr. Amina Hassan</div>
+          <div class="role">Owner</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-col" style="position:relative;">
+      <div class="topbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          Search patients, appointments…
+        </div>
+        <div class="topbar-right">
+          <div class="bell-wrap" onclick="show('notif')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><div class="bell-dot"></div></div>
+          <div class="profile-mini" onclick="show('profile')">
+            <div class="avatar-sm">AH</div>
+            <div>
+              <div class="name">Amina Hassan</div>
+              <div class="role">Owner</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <h2>Good morning, Amina</h2>
+        <div class="lede">Here's what's happening at Bright Smile Clinic today — Thursday, July 9</div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="lbl">Today's appointments</div><div class="val">18</div><div class="delta up">↑ 4 vs. avg</div></div>
+          <div class="kpi-card"><div class="lbl">No-show risk (high)</div><div class="val">3</div><div class="delta warn">Reminders queued</div></div>
+          <div class="kpi-card"><div class="lbl">Revenue this week</div><div class="val mono">E£48.2k</div><div class="delta up">↑ 12%</div></div>
+          <div class="kpi-card"><div class="lbl">Low-stock items</div><div class="val">2</div><div class="delta warn">Needs reorder</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-row"><div class="dot-status" style="background:#2E8B57"></div>10:00 — Youssef Adel · Cleaning · Dr. Hassan</div>
+          <div class="panel-row"><div class="dot-status" style="background:#B7791F"></div>10:30 — Nour Salem · Filling · high no-show risk</div>
+          <div class="panel-row"><div class="dot-status" style="background:#2E8B57"></div>11:15 — Karim Fathy · Consultation · Dr. Zaki</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= NOTIFICATIONS ================= -->
+<div class="screen" id="screen-notif">
+  <div class="shell" style="position:relative;">
+    <div class="sidebar">
+      <div class="brand">
+        <svg viewBox="0 0 40 40" fill="none"><path d="M20 4c-4.5 0-7 2.6-9.2 2.6-2.6 0-4.3-1.6-4.3 3 0 7 2.4 15 5.6 19.8 1.6 2.4 3 3.6 4 3.6.9 0 1.3-1 1.9-3.4.5-2 1-3.4 2-3.4s1.5 1.4 2 3.4c.6 2.4 1 3.4 1.9 3.4 1 0 2.4-1.2 4-3.6C31.2 24.6 33.6 16.6 33.6 9.6c0-4.6-1.7-3-4.3-3C27.1 6.6 24.5 4 20 4z" fill="#0E7C86"/></svg>
+        <div class="wordmark">Dent<span>AI</span></div>
+      </div>
+      <div class="nav-group-label">Overview</div>
+      <div class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Appointments</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>Patients</div>
+      <div class="sidebar-foot">
+        <div class="avatar-sm">AH</div>
+        <div><div class="who">Dr. Amina Hassan</div><div class="role">Owner</div></div>
+      </div>
+    </div>
+    <div class="main-col">
+      <div class="topbar">
+        <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search patients, appointments…</div>
+        <div class="topbar-right">
+          <div class="bell-wrap" style="background:var(--teal-light);"><svg viewBox="0 0 24 24" fill="none" stroke="#0E7C86" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><div class="bell-dot"></div></div>
+          <div class="profile-mini"><div class="avatar-sm">AH</div><div><div class="name">Amina Hassan</div><div class="role">Owner</div></div></div>
+        </div>
+      </div>
+      <div class="content"><h2>Dashboard</h2><div class="lede">Notification center open — alerts requiring attention appear here in real time.</div></div>
+
+      <div class="notif-panel-wrap">
+        <div class="notif-head"><h3>Notifications</h3><span class="mark">Mark all as read</span></div>
+        <div class="notif-tabs">
+          <div class="ntab on">All · 6</div><div class="ntab">Risk</div><div class="ntab">Inventory</div><div class="ntab">Waitlist</div>
+        </div>
+        <div class="notif-list">
+          <div class="notif-item unread">
+            <div class="n-icon" style="background:var(--amber-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#B7791F" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg></div>
+            <div class="n-body"><div class="n-title">High no-show risk — Nour Salem</div><div class="n-desc">Tomorrow 10:30 · risk score 82% · early reminder sent via WhatsApp</div><div class="n-time">12 minutes ago</div></div>
+            <div class="n-unread-dot"></div>
+          </div>
+          <div class="notif-item unread">
+            <div class="n-icon" style="background:var(--red-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#C4433D" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></div>
+            <div class="n-body"><div class="n-title">Low stock — Composite resin (A2)</div><div class="n-desc">6 units left · threshold is 10 · reorder recommended</div><div class="n-time">1 hour ago</div></div>
+            <div class="n-unread-dot"></div>
+          </div>
+          <div class="notif-item">
+            <div class="n-icon" style="background:var(--teal-light);"><svg viewBox="0 0 24 24" fill="none" stroke="#0E7C86" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+            <div class="n-body"><div class="n-title">Waitlist slot filled</div><div class="n-desc">Mona Tarek accepted the 2:00 PM slot freed by a cancellation</div><div class="n-time">3 hours ago</div></div>
+          </div>
+          <div class="notif-item">
+            <div class="n-icon" style="background:var(--amber-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#B7791F" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+            <div class="n-body"><div class="n-title">Anesthetic gel expiring soon</div><div class="n-desc">Batch #2291 expires in 5 days · 12 units in stock</div><div class="n-time">Yesterday</div></div>
+          </div>
+          <div class="notif-item">
+            <div class="n-icon" style="background:var(--green-bg);"><svg viewBox="0 0 24 24" fill="none" stroke="#2E8B57" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div class="n-body"><div class="n-title">Weekly forecast updated</div><div class="n-desc">Next 3 months revenue forecast recalculated</div><div class="n-time">Yesterday</div></div>
+          </div>
+          <div class="notif-item">
+            <div class="n-icon" style="background:var(--teal-light);"><svg viewBox="0 0 24 24" fill="none" stroke="#0E7C86" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
+            <div class="n-body"><div class="n-title">New patient registered</div><div class="n-desc">Karim Fathy added by reception</div><div class="n-time">2 days ago</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PROFILE & SETTINGS ================= -->
+<div class="screen" id="screen-profile">
+  <div class="shell">
+    <div class="sidebar">
+      <div class="brand">
+        <svg viewBox="0 0 40 40" fill="none"><path d="M20 4c-4.5 0-7 2.6-9.2 2.6-2.6 0-4.3-1.6-4.3 3 0 7 2.4 15 5.6 19.8 1.6 2.4 3 3.6 4 3.6.9 0 1.3-1 1.9-3.4.5-2 1-3.4 2-3.4s1.5 1.4 2 3.4c.6 2.4 1 3.4 1.9 3.4 1 0 2.4-1.2 4-3.6C31.2 24.6 33.6 16.6 33.6 9.6c0-4.6-1.7-3-4.3-3C27.1 6.6 24.5 4 20 4z" fill="#0E7C86"/></svg>
+        <div class="wordmark">Dent<span>AI</span></div>
+      </div>
+      <div class="nav-group-label">Overview</div>
+      <div class="nav-item" onclick="show('shell')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
+      <div class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Appointments</div>
+      <div class="nav-group-label">System</div>
+      <div class="nav-item active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>Settings</div>
+      <div class="sidebar-foot">
+        <div class="avatar-sm">AH</div>
+        <div><div class="who">Dr. Amina Hassan</div><div class="role">Owner</div></div>
+      </div>
+    </div>
+    <div class="main-col">
+      <div class="topbar">
+        <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search patients, appointments…</div>
+        <div class="topbar-right">
+          <div class="bell-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><div class="bell-dot"></div></div>
+          <div class="profile-mini"><div class="avatar-sm">AH</div><div><div class="name">Amina Hassan</div><div class="role">Owner</div></div></div>
+        </div>
+      </div>
+      <div class="content">
+        <h2>Profile &amp; Settings</h2>
+        <div class="lede">Manage your account details, clinic preferences, and security.</div>
+
+        <div class="settings-grid">
+          <div class="settings-nav">
+            <div class="sitem on">Profile</div>
+            <div class="sitem">Clinic settings</div>
+            <div class="sitem">Notification preferences</div>
+            <div class="sitem">Security &amp; password</div>
+            <div class="sitem">Staff &amp; roles</div>
+          </div>
+
+          <div class="settings-panel">
+            <h3>Profile information</h3>
+            <div class="desc">This is how you'll appear across DentAI.</div>
+
+            <div class="avatar-upload">
+              <div class="avatar-lg">AH</div>
+              <div>
+                <button class="btn-ghost">Upload photo</button>
+                <div style="font-size:11.5px;color:var(--faint);margin-top:6px;">JPG or PNG, up to 2MB</div>
+              </div>
+            </div>
+
+            <div class="field-grid">
+              <div class="field"><label>Full name</label><input value="Amina Hassan"></div>
+              <div class="field"><label>Phone number</label><input value="+20 100 555 0812"></div>
+              <div class="field"><label>Email address</label><input value="dr.amina@brightsmile.clinic"></div>
+              <div class="field"><label>Role</label><input value="Owner" disabled></div>
+            </div>
+
+            <h3 style="margin-top:8px;">Notification preferences</h3>
+            <div class="desc">Choose what you get notified about.</div>
+            <div class="toggle-row">
+              <div><div class="t-title">High-risk no-show alerts</div><div class="t-desc">Get notified when a patient is flagged high-risk</div></div>
+              <div class="switch on"></div>
+            </div>
+            <div class="toggle-row">
+              <div><div class="t-title">Low-stock &amp; expiry alerts</div><div class="t-desc">Inventory falling below threshold or nearing expiry</div></div>
+              <div class="switch on"></div>
+            </div>
+            <div class="toggle-row">
+              <div><div class="t-title">Weekly financial summary</div><div class="t-desc">Revenue and profit recap every Monday</div></div>
+              <div class="switch"></div>
+            </div>
+
+            <div class="save-bar">
+              <button class="btn-save">Save changes</button>
+              <button class="btn-ghost">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.querySelectorAll('.viewer-bar button').forEach(b=>b.classList.remove('active'));
+  const map={login:0,forgot:1,shell:2,notif:3,profile:4};
+  document.querySelectorAll('.viewer-bar button')[map[id]].classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>

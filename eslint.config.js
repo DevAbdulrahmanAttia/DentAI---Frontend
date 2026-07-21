@@ -15,6 +15,36 @@ module.exports = defineConfig([
     ],
     processor: angular.processInlineTemplates,
     rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/explicit-function-return-type': [
+        'error',
+        {
+          allowExpressions: true,
+          allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: true,
+          allowDirectConstAssertionInArrowFunctions: true
+        }
+      ],
+      '@angular-eslint/prefer-standalone': 'error',
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'class',
+          format: ['PascalCase']
+        },
+        {
+          selector: 'interface',
+          format: ['PascalCase']
+        },
+        {
+          selector: 'typeAlias',
+          format: ['PascalCase']
+        },
+        {
+          selector: 'enum',
+          format: ['PascalCase']
+        }
+      ],
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -28,17 +58,17 @@ module.exports = defineConfig([
         {
           type: 'attribute',
           prefix: 'app',
-          style: 'camelCase',
-        },
+          style: 'camelCase'
+        }
       ],
       '@angular-eslint/component-selector': [
         'error',
         {
           type: 'element',
           prefix: 'app',
-          style: 'kebab-case',
-        },
-      ],
+          style: 'kebab-case'
+        }
+      ]
     },
   },
   {

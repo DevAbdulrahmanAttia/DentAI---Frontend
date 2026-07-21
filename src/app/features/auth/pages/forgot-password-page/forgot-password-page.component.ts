@@ -89,7 +89,7 @@ export class ForgotPasswordPageComponent implements OnInit, OnDestroy {
         this.loading.set(false);
         this.activeStep.set(3); // Go to step 3 (Success)
       },
-      error: (err) => {
+      error: (err: { message?: string }) => {
         this.loading.set(false);
         this.errorMessage.set(err.message || 'Failed to reset password. Please check the code.');
       }

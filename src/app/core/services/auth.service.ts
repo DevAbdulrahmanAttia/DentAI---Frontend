@@ -84,6 +84,21 @@ export class AuthService {
   }
 
   /**
+   * Resets password using user-provided new password and optional verification code.
+   */
+  resetPassword(newPassword: string, code?: string): Observable<boolean> {
+    const endpointUrl = `${this.apiUrl}/auth/reset-password`;
+    return this.http.post<boolean>(endpointUrl, { newPassword, code }).pipe(
+      catchError((error) => {
+        if (!environment.production && (error.status === 0 || error.status === 404)) {
+          return of(true);
+        }
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Clears authentication token and user data, resetting reactive signals and redirecting to login.
    */
   logout(): void {

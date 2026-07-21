@@ -6,15 +6,20 @@
  * Extend with token attachment logic as authentication is implemented.
  */
 
+import { inject } from '@angular/core';
 import { HttpInterceptorFn } from '@angular/common/http';
+import { StorageService } from '@core/services/storage.service';
+import { STORAGE_KEYS } from '@core/constants/storage-keys';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // TODO: Implement token attachment logic
-  // const token = this.authService.getToken();
-  // if (token) {
-  //   req = req.clone({
-  //     setHeaders: { Authorization: `Bearer ${token}` }
-  //   });
-  // }
+  const storageService = inject(StorageService);
+  const token = storageService.getItem<string>(STORAGE_KEYS.AUTH_TOKEN);
+
+  if (token) {
+    const authReq = req.clone({
+      setHeaders: { Authorization: `Bearer ${token}` }
+    });
+    return next(authReq);
+  }
   return next(req);
 };

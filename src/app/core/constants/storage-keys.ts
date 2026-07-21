@@ -5,4 +5,7 @@
  * Keys will be added only when real business requirements emerge.
  */
 
-export const STORAGE_KEYS = {} as const;
+export const STORAGE_KEYS = {
+  AUTH_TOKEN: 'auth_token',
+  USER_DATA: 'user'
+} as const;

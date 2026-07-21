@@ -1,86 +1,131 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { StorageService } from './storage.service';
-import { User, UserRole } from '../models/auth.model';
-import { delay, Observable, of, map, tap } from 'rxjs';
+/**
+ * Authentication Service
+ *
+ * Core service managing authentication logic, JWT storage,
+ * and user role signals state using Angular Standalone APIs and Signals.
+ */
+
+import { inject, Injectable, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { Observable, of, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
+import { StorageService } from '@core/services/storage.service';
+import { API_ENDPOINTS } from '@core/constants/api-endpoints';
+import { STORAGE_KEYS } from '@core/constants/storage-keys';
+import { API_URL } from '@core/tokens/api-url.token';
+import { AuthResponse, LoginCredentials, User, UserRole } from '@core/models/auth.model';
+import { environment } from '@env/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly storage = inject(StorageService);
-  private readonly TOKEN_KEY = 'dentai_token';
-  private readonly USER_KEY = 'dentai_user';
+  private readonly http = inject(HttpClient);
+  private readonly storageService = inject(StorageService);
+  private readonly router = inject(Router);
+  private readonly apiUrl = inject(API_URL, { optional: true }) || environment.apiUrl;
 
-  private readonly _currentUser = signal<User | null>(null);
-  readonly currentUser = this._currentUser.asReadonly();
+  // Angular Signals for Authentication State
+  readonly currentUser = signal<User | null>(this.getInitialUser());
+  readonly token = signal<string | null>(this.getInitialToken());
+  readonly isAuthenticated = computed<boolean>(() => !!this.token());
+  readonly userRole = computed<UserRole | null>(() => this.currentUser()?.role ?? null);
 
-  constructor() {
-    this.loadSession();
-  }
-
-  private loadSession(): void {
-    const token = this.storage.getItem<string>(this.TOKEN_KEY);
-    const user = this.storage.getItem<User>(this.USER_KEY);
-    if (token && user) {
-      this._currentUser.set(user);
+  /**
+   * Executes authentication request against the backend endpoint,
+   * stores JWT token and user details via StorageService, and updates reactive state.
+   * Accepts LoginCredentials object or (email, role, password).
+   */
+  login(
+    credentialsOrEmail: LoginCredentials | string,
+    role?: UserRole,
+    password?: string
+  ): Observable<AuthResponse> {
+    let credentials: LoginCredentials;
+    if (typeof credentialsOrEmail === 'string') {
+      credentials = {
+        email: credentialsOrEmail,
+        role: role ?? 'owner',
+        password: password ?? 'password123'
+      };
+    } else {
+      credentials = credentialsOrEmail;
     }
-  }
 
-  login(email: string, role: UserRole): Observable<User> {
-    // Mock user details matching design specs
-    let name = 'Dr. Amina Hassan';
-    let initials = 'AH';
-    
-    if (role === 'Doctor') {
-      name = 'Dr. Omar Zaki';
-      initials = 'OZ';
-    } else if (role === 'Reception') {
-      name = 'Sara Ahmed';
-      initials = 'SA';
-    }
+    const endpointUrl = `${this.apiUrl}${API_ENDPOINTS.AUTH.LOGIN}`;
 
-    const mockUser: User = {
-      id: 'usr_' + Math.random().toString(36).substring(2, 9),
-      email,
-      name,
-      role,
-      avatar: initials
-    };
-
-    const response = {
-      user: mockUser,
-      token: 'mock_jwt_token_' + Date.now()
-    };
-
-    return of(response).pipe(
-      delay(1200), // Simulate network latency
-      tap(res => {
-        this.storage.setItem(this.TOKEN_KEY, res.token);
-        this.storage.setItem(this.USER_KEY, res.user);
-        this._currentUser.set(res.user);
+    return this.http.post<AuthResponse>(endpointUrl, credentials).pipe(
+      tap((response) => {
+        this.setSession(response.token, response.user);
       }),
-      map(res => res.user)
+      catchError((error) => {
+        // Fallback for development if backend server is not running
+        if (!environment.production && (error.status === 0 || error.status === 404)) {
+          const roleStr = String(credentials.role || 'owner').toLowerCase();
+          const mockUser: User = {
+            id: 'usr_' + Math.random().toString(36).substring(2, 9),
+            email: credentials.email,
+            role: credentials.role ?? 'owner',
+            name: roleStr.includes('doc')
+              ? 'Dr. Zaki'
+              : roleStr.includes('recept')
+                ? 'Receptionist User'
+                : 'Amina Hassan'
+          };
+          const mockToken = `mock-jwt-token-${mockUser.role}-${Date.now()}`;
+          const mockResponse: AuthResponse = { token: mockToken, user: mockUser };
+          this.setSession(mockResponse.token, mockResponse.user);
+          return of(mockResponse);
+        }
+        return throwError(() => error);
+      })
     );
   }
 
-  resetPassword(_newPassword: string): Observable<boolean> {
-    // Simulate reset latency
-    return of(true).pipe(
-      delay(1500)
-    );
-  }
-
+  /**
+   * Clears authentication token and user data, resetting reactive signals and redirecting to login.
+   */
   logout(): void {
-    this.storage.removeItem(this.TOKEN_KEY);
-    this.storage.removeItem(this.USER_KEY);
-    this._currentUser.set(null);
+    this.storageService.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    this.storageService.removeItem(STORAGE_KEYS.USER_DATA);
+    this.token.set(null);
+    this.currentUser.set(null);
+    this.router.navigate(['/login']);
+  }
+
+  /**
+   * Checks if the currently authenticated user has the specified role(s).
+   */
+  hasRole(roles: UserRole | UserRole[]): boolean {
+    const currentRole = this.userRole();
+    if (!currentRole) return false;
+    if (Array.isArray(roles)) {
+      return roles.includes(currentRole);
+    }
+    return currentRole === roles;
   }
 
   getToken(): string | null {
-    return this.storage.getItem<string>(this.TOKEN_KEY);
+    return this.token();
   }
 
-  isAuthenticated(): boolean {
-    return this.currentUser() !== null;
+  getUser(): User | null {
+    return this.currentUser();
+  }
+
+  private setSession(token: string, user: User): void {
+    this.storageService.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+    this.storageService.setItem(STORAGE_KEYS.USER_DATA, user);
+    this.token.set(token);
+    this.currentUser.set(user);
+  }
+
+  private getInitialToken(): string | null {
+    return this.storageService.getItem<string>(STORAGE_KEYS.AUTH_TOKEN);
+  }
+
+  private getInitialUser(): User | null {
+    return this.storageService.getItem<User>(STORAGE_KEYS.USER_DATA);
   }
 }

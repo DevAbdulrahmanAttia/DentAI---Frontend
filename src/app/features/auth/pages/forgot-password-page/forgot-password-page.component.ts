@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
@@ -20,26 +20,27 @@ import { StepTrackerComponent } from '@shared/ui/step-tracker/step-tracker.compo
   templateUrl: './forgot-password-page.html',
   styleUrl: './forgot-password-page.css'
 })
-export class ForgotPasswordPageComponent implements OnInit, OnDestroy {
+export class ForgotPasswordPageComponent implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+
+  requestForm: FormGroup = this.fb.group({
+    phone: ['', [Validators.required]]
+  });
 
   resetForm: FormGroup = this.fb.group({
     otp: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
     newPassword: ['', [Validators.required, Validators.minLength(8)]]
   });
 
-  activeStep = signal<number>(2); // Start at step 2 to match design reference visual
+  activeStep = signal<number>(1);
+  submittedPhone = signal<string>('');
   loading = signal<boolean>(false);
   errorMessage = signal<string>('');
-  
+
   timerSeconds = signal<number>(42);
   private timerInterval: ReturnType<typeof setInterval> | undefined;
-
-  ngOnInit(): void {
-    this.startTimer();
-  }
 
   ngOnDestroy(): void {
     this.clearTimer();
@@ -68,9 +69,51 @@ export class ForgotPasswordPageComponent implements OnInit, OnDestroy {
     return s < 10 ? `00:0${s}` : `00:${s}`;
   }
 
+  onRequestSubmit(): void {
+    if (this.requestForm.invalid || this.loading()) {
+      this.requestForm.markAllAsTouched();
+      return;
+    }
+
+    this.loading.set(true);
+    this.errorMessage.set('');
+
+    const { phone } = this.requestForm.value;
+
+    this.authService.requestPasswordReset(phone).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.submittedPhone.set(phone);
+        this.activeStep.set(2);
+        this.startTimer();
+      },
+      error: (err: { error?: { message?: string }; message?: string }) => {
+        this.loading.set(false);
+        this.errorMessage.set(
+          err?.error?.message || err?.message || 'Failed to send a reset code. Please try again.'
+        );
+      }
+    });
+  }
+
   resendCode(): void {
     if (this.timerSeconds() > 0 || this.loading()) return;
-    this.startTimer();
+
+    this.loading.set(true);
+    this.errorMessage.set('');
+
+    this.authService.requestPasswordReset(this.submittedPhone()).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.startTimer();
+      },
+      error: (err: { error?: { message?: string }; message?: string }) => {
+        this.loading.set(false);
+        this.errorMessage.set(
+          err?.error?.message || err?.message || 'Failed to resend the code. Please try again.'
+        );
+      }
+    });
   }
 
   onSubmit(): void {
@@ -82,16 +125,18 @@ export class ForgotPasswordPageComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.errorMessage.set('');
 
-    const { newPassword } = this.resetForm.value;
+    const { otp, newPassword } = this.resetForm.value;
 
-    this.authService.resetPassword(newPassword).subscribe({
+    this.authService.resetPassword(this.submittedPhone(), otp, newPassword).subscribe({
       next: () => {
         this.loading.set(false);
         this.activeStep.set(3); // Go to step 3 (Success)
       },
-      error: (err: { message?: string }) => {
+      error: (err: { error?: { message?: string }; message?: string }) => {
         this.loading.set(false);
-        this.errorMessage.set(err.message || 'Failed to reset password. Please check the code.');
+        this.errorMessage.set(
+          err?.error?.message || err?.message || 'Failed to reset password. Please check the code.'
+        );
       }
     });
   }

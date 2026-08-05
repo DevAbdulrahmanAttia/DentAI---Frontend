@@ -1,0 +1,120 @@
+<form class="form" [formGroup]="bookingForm" (ngSubmit)="submit()">
+  <section class="form-section">
+    <h2>Patient</h2>
+
+    @if (selectedPatient(); as patient) {
+      <div class="selected-patient">
+        <div>
+          <span class="selected-patient-name">{{ patient.name }}</span>
+          <span class="selected-patient-phone">{{ patient.phone }}</span>
+        </div>
+        <button type="button" class="link-btn" (click)="clearSelectedPatient()">Change</button>
+      </div>
+    } @else {
+      <div class="patient-search">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search by name or phone..."
+          [formControl]="searchControl"
+        />
+
+        @if (searching()) {
+          <p class="hint">Searching...</p>
+        } @else if (searchResults().length > 0) {
+          <ul class="search-results">
+            @for (patient of searchResults(); track patient.id) {
+              <li>
+                <button type="button" class="result-btn" (click)="selectPatient(patient)">
+                  <span class="result-name">{{ patient.name }}</span>
+                  <span class="result-phone">{{ patient.phone }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        <button type="button" class="link-btn" (click)="toggleNewPatientForm()">
+          {{ showNewPatientForm() ? "Cancel new patient" : "Can't find them? Add new patient" }}
+        </button>
+
+        @if (showNewPatientForm()) {
+          <div class="new-patient-form" [formGroup]="newPatientForm">
+            <app-input-field label="Full name" formControlName="name" placeholder="Patient name" />
+            <app-input-field label="Phone" formControlName="phone" placeholder="e.g. +201000000000" />
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="form-section">
+    <h2>Doctor</h2>
+    <div class="chip-group">
+      @for (doctor of doctors(); track doctor.id) {
+        <label class="chip" [class.chip-active]="bookingForm.controls.doctorId.value === doctor.id">
+          <input type="radio" formControlName="doctorId" [value]="doctor.id" />
+          {{ doctor.name }}
+        </label>
+      }
+      @if (doctors().length === 0) {
+        <p class="hint">No doctors available.</p>
+      }
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h2>Procedure</h2>
+    <div class="procedure-list">
+      @for (procedure of procedures(); track procedure.id) {
+        <label
+          class="procedure-row"
+          [class.procedure-row-active]="bookingForm.controls.procedureTypeId.value === procedure.id"
+        >
+          <input type="radio" formControlName="procedureTypeId" [value]="procedure.id" />
+          <span class="procedure-name">{{ procedure.name }}</span>
+          <span class="procedure-meta">{{ procedure.estDurationMin }} min</span>
+          <span class="procedure-price">{{ formatPrice(procedure) }}</span>
+        </label>
+      }
+      @if (procedures().length === 0) {
+        <p class="hint">No procedures available.</p>
+      }
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h2>Date &amp; time</h2>
+    <div class="datetime-row">
+      <div class="field">
+        <label for="date">Date</label>
+        <input id="date" type="date" formControlName="date" class="native-input" />
+      </div>
+      <div class="field">
+        <label for="time">Time</label>
+        <input id="time" type="time" formControlName="time" class="native-input" />
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <h2>Notes</h2>
+    <textarea
+      class="notes-input"
+      formControlName="notes"
+      placeholder="Optional notes for the front desk (not saved to the backend yet)"
+      rows="3"
+    ></textarea>
+    <p class="hint">Notes are for reference only right now — they aren't sent to the server.</p>
+  </section>
+
+  @if (submitError()) {
+    <p class="form-error">{{ submitError() }}</p>
+  }
+
+  <div class="form-actions">
+    <button type="submit" class="submit-btn" [disabled]="submitting()">
+      {{ submitting() ? (creatingPatient() ? 'Adding patient...' : 'Booking...') : 'Book appointment' }}
+    </button>
+  </div>
+</form>

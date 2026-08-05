@@ -1,0 +1,74 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Inventory</h1>
+      <p class="subtitle">Track stock levels, costs, and expiry across the clinic.</p>
+    </div>
+    @if (authService.hasRole('owner')) {
+      <button type="button" class="action-btn action-btn-primary" (click)="showAddForm.set(true)">
+        + Add item
+      </button>
+    }
+  </div>
+
+  @if (showAddForm()) {
+    <app-modal title="Add inventory item" (closed)="showAddForm.set(false)">
+      <app-inventory-item-form mode="add" (saved)="onItemAdded($event)" />
+    </app-modal>
+  }
+
+  @if (editingItem(); as item) {
+    <app-modal title="Edit inventory item" (closed)="editingItem.set(null)">
+      <app-inventory-item-form mode="edit" [initialValue]="item" (saved)="onItemUpdated($event)" />
+    </app-modal>
+  }
+
+  <div class="toolbar">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search by item name..."
+      [formControl]="searchControl"
+    />
+
+    <select
+      class="category-filter"
+      [value]="categoryFilter()"
+      (change)="onCategoryFilterChange($any($event.target).value)"
+    >
+      <option value="all">All categories</option>
+      @for (category of categories; track category) {
+        <option [value]="category">{{ category }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="panel">
+    @if (loading()) {
+      <p class="empty-state">Loading inventory...</p>
+    } @else if (loadError()) {
+      <p class="empty-state empty-state-error">Couldn't load inventory.</p>
+    } @else if (filteredItems().length === 0) {
+      <p class="empty-state">No items found.</p>
+    } @else {
+      <ul class="item-list">
+        @for (item of filteredItems(); track item.id) {
+          <li class="item-row">
+            <span class="item-name">{{ item.name }}</span>
+            <span class="item-category">{{ item.category }}</span>
+            <span class="item-stock">{{ item.quantityInStock }} {{ item.unit }}</span>
+            <span class="item-cost">EGP {{ item.unitCost }}</span>
+            <span class="item-expiry">{{ item.expiryDate || 'No expiry' }}</span>
+            <app-status-pill [tone]="stockStatusInfo(item).tone" [label]="stockStatusInfo(item).label" />
+            @if (authService.hasRole('owner')) {
+              <span class="item-actions">
+                <button type="button" class="link-btn" (click)="editingItem.set(item)">Edit</button>
+                <button type="button" class="link-btn link-btn-danger" (click)="deleteItem(item)">Delete</button>
+              </span>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>

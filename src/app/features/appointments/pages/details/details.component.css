@@ -1,0 +1,25 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.back-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-teal, #0e7c86);
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--color-border, #e3e8ec);
+  border-radius: 12px;
+  padding: 22px 24px;
+}

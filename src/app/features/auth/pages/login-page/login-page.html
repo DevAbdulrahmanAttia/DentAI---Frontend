@@ -4,10 +4,9 @@
       <app-logo size="lg" />
     </div>
 
-    <app-molar-scanner />
-
     <div>
-      <p class="quote">DentAI turns four weeks of attendance history into <b>one risk score per patient</b> — filling cancelled slots before the chair goes cold.</p>
+      <h2 class="tagline">Smarter care. <span class="tagline-accent">Better outcomes.</span></h2>
+      <p class="quote"><b>All-in-one platform</b> for your dental clinic.</p>
       <div class="stats">
         <div><div class="num">−31%</div><div class="lbl">no-show rate</div></div>
         <div><div class="num">3.2×</div><div class="lbl">slots recovered</div></div>
@@ -23,20 +22,6 @@
       <div class="sub">Sign in to manage your clinic's schedule, patients, and inventory.</div>
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        <div class="role-select" aria-label="Select login role">
-          @for (role of roles; track role) {
-            <button
-              type="button"
-              class="role-chip"
-              [class.sel]="loginForm.get('role')?.value === role"
-              (click)="selectRole(role)"
-              [disabled]="loading()"
-            >
-              {{ role }}
-            </button>
-          }
-        </div>
-
         @if (errorMessage()) {
           <div class="general-error" role="alert">
             {{ errorMessage() }}

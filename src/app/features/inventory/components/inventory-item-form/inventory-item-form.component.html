@@ -1,0 +1,65 @@
+<form class="item-form" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="field">
+    <label for="name">Item name</label>
+    <input id="name" type="text" formControlName="name" class="native-input" placeholder="e.g. Nitrile Gloves" />
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="category">Category</label>
+      <select id="category" formControlName="category" class="native-select">
+        @for (category of categories; track category) {
+          <option [value]="category">{{ category }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="unit">Unit</label>
+      <input id="unit" type="text" formControlName="unit" class="native-input" placeholder="e.g. box, ml, pcs" />
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="quantityInStock">Quantity in stock</label>
+      <input
+        id="quantityInStock"
+        type="number"
+        min="0"
+        step="0.01"
+        formControlName="quantityInStock"
+        class="native-input"
+      />
+    </div>
+    <div class="field">
+      <label for="lowStockThreshold">Low-stock threshold</label>
+      <input
+        id="lowStockThreshold"
+        type="number"
+        min="0"
+        step="0.01"
+        formControlName="lowStockThreshold"
+        class="native-input"
+      />
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="unitCost">Unit cost (EGP)</label>
+      <input id="unitCost" type="number" min="0" step="0.01" formControlName="unitCost" class="native-input" />
+    </div>
+    <div class="field">
+      <label for="expiryDate">Expiry date (optional)</label>
+      <input id="expiryDate" type="date" formControlName="expiryDate" class="native-input" />
+    </div>
+  </div>
+
+  @if (saveError) {
+    <p class="form-error">{{ saveError }}</p>
+  }
+
+  <div class="form-actions">
+    <button type="submit" class="submit-btn" [disabled]="isSaving">{{ submitLabel }}</button>
+  </div>
+</form>

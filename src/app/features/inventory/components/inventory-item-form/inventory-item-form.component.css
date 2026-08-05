@@ -1,0 +1,78 @@
+.item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field-row {
+  display: flex;
+  gap: 14px;
+}
+
+.field-row .field {
+  flex: 1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text, #1e2b33);
+}
+
+.native-input,
+.native-select {
+  padding: 10px 12px;
+  border: 1.5px solid var(--color-border, #e1e7ea);
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-family: inherit;
+  text-transform: capitalize;
+}
+
+.native-input {
+  text-transform: none;
+}
+
+.native-input:focus,
+.native-select:focus {
+  outline: none;
+  border-color: var(--color-teal, #0e7c86);
+}
+
+.form-error {
+  color: var(--color-red, #c4433d);
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.submit-btn {
+  padding: 10px 20px;
+  border-radius: 9px;
+  border: none;
+  background: var(--color-navy, #0f2a47);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: var(--color-teal, #0e7c86);
+}
+
+.submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

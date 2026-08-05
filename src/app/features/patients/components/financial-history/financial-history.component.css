@@ -1,0 +1,98 @@
+.panel {
+  background: #fff;
+  border: 1px solid var(--color-border, #e3e8ec);
+  border-radius: 12px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text, #1e2b33);
+  margin: 0;
+}
+
+.subsection-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text, #1e2b33);
+  margin: 6px 0 0;
+}
+
+.empty-state {
+  font-size: 13px;
+  color: var(--color-faint, #8a96a1);
+}
+
+.empty-state-error {
+  color: var(--color-red, #c4433d);
+}
+
+.outstanding-note {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-amber, #b7791f);
+  margin: 0;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th {
+  text-align: left;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-faint, #8a96a1);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border, #e3e8ec);
+}
+
+.history-table td {
+  padding: 10px;
+  font-size: 13px;
+  color: var(--color-text, #1e2b33);
+  border-bottom: 1px solid var(--color-border, #e3e8ec);
+}
+
+.invoice-link {
+  font-weight: 700;
+  color: var(--color-navy, #0f2a47);
+  text-decoration: none;
+}
+
+.invoice-link:hover {
+  text-decoration: underline;
+}
+
+.payment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.payment-row {
+  display: flex;
+  gap: 14px;
+  padding: 8px 0;
+  font-size: 12.5px;
+  color: var(--color-text, #1e2b33);
+}
+
+.payment-row + .payment-row {
+  border-top: 1px solid var(--color-border, #e3e8ec);
+}
+
+.payment-row-refund {
+  color: var(--color-red, #c4433d);
+}
+
+.muted {
+  color: var(--color-faint, #8a96a1);
+  text-transform: capitalize;
+}

@@ -1,0 +1,333 @@
+@if (loading()) {
+  <p class="empty-state">Loading appointment...</p>
+} @else if (loadError() || !appointment()) {
+  <p class="empty-state empty-state-error">Couldn't load this appointment.</p>
+} @else {
+  @let appt = appointment()!;
+
+  <div class="panel-header">
+    <div>
+      <h1>{{ appt.patient.name }}</h1>
+      <p class="subtitle">{{ formatDateTime(appt.scheduledAt) }}</p>
+    </div>
+    <div class="pills">
+      @if (appt.riskLevel) {
+        <app-status-pill [tone]="riskLevelInfo(appt.riskLevel).tone" [label]="riskLevelInfo(appt.riskLevel).label" />
+      }
+      <app-status-pill
+        [tone]="appointmentStatusInfo(appt.status).tone"
+        [label]="appointmentStatusInfo(appt.status).label"
+      />
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-item">
+      <span class="detail-label">Doctor</span>
+      <span class="detail-value">{{ appt.doctor.name || 'Unassigned' }}</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">Procedure</span>
+      <span class="detail-value">{{ appt.procedureType.name }}</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">Duration</span>
+      <span class="detail-value">{{ appt.procedureType.estDurationMin }} min</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">Price</span>
+      <span class="detail-value">{{ formatPrice(appt.finalPrice) }}</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">Patient phone</span>
+      <span class="detail-value">{{ appt.patient.phone }}</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">Predicted no-show risk</span>
+      <span class="detail-value">{{ appt.riskScore !== null ? appt.riskScore + '%' : 'Unscored' }}</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">Patient no-show history</span>
+      <span class="detail-value">{{ appt.patient.noShowRiskScore }}%</span>
+    </div>
+  </div>
+
+  @if (appt.riskLevel) {
+    <div class="ai-explain">
+      @if (riskExplanation() === undefined) {
+        <button type="button" class="link-btn" [disabled]="riskExplanationLoading()" (click)="explainRisk()">
+          {{ riskExplanationLoading() ? 'Thinking...' : 'Why this risk level? (AI)' }}
+        </button>
+      } @else if (riskExplanation() === null) {
+        <p class="ai-unavailable">AI explanations aren't available right now.</p>
+      } @else {
+        <p class="ai-explanation">{{ riskExplanation() }}</p>
+      }
+    </div>
+  }
+
+  <!-- Visit lifecycle: check-in -> start (readiness-gated) -> complete -->
+  @if (appt.status === 'booked' || appt.status === 'in_progress') {
+    <div class="visit-section">
+      <h2 class="section-title">Visit</h2>
+
+      <div class="visit-timeline">
+        <span class="visit-step" [class.visit-step-done]="appt.arrivedAt">
+          Arrived: {{ appt.arrivedAt ? formatTime(appt.arrivedAt) : '—' }}
+          @if (lateByMinutes(); as late) {
+            <span class="late-badge">{{ late }} min late</span>
+          }
+        </span>
+        <span class="visit-step" [class.visit-step-done]="appt.actualStartAt">
+          Started: {{ appt.actualStartAt ? formatTime(appt.actualStartAt) : '—' }}
+        </span>
+        <span class="visit-step">Booked for {{ appt.durationMin }} min</span>
+      </div>
+
+      @if (appt.status === 'booked') {
+        @if (readinessLoading()) {
+          <p class="readiness-loading">Checking materials and medical history...</p>
+        } @else if (readiness(); as r) {
+          <div class="readiness" [class.readiness-blocked]="!r.canStart">
+            <div class="readiness-head">
+              <span class="readiness-title">Pre-procedure check</span>
+              @if (r.requiresAnesthesia) {
+                <app-status-pill tone="amber" label="Uses anesthesia" />
+              }
+            </div>
+
+            @for (blocker of r.blockers; track blocker.message) {
+              <p class="readiness-line readiness-blocker">⛔ {{ blocker.message }}</p>
+            }
+
+            @if (r.medicalWarnings.length > 0) {
+              <div class="medical-warnings">
+                @for (w of r.medicalWarnings; track w.id) {
+                  <div class="medical-warning">
+                    <app-status-pill
+                      [tone]="medicalSeverityInfo(w.severity).tone"
+                      [label]="medicalSeverityInfo(w.severity).label"
+                    />
+                    <span class="medical-warning-text">
+                      {{ w.name }}
+                      @if (w.anesthesiaRelevant && r.requiresAnesthesia) {
+                        <strong> — affects anesthesia</strong>
+                      }
+                      @if (w.notes) {
+                        <span class="medical-warning-note"> ({{ w.notes }})</span>
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (r.materials.length > 0) {
+              <ul class="material-list">
+                @for (m of r.materials; track m.inventoryItemId) {
+                  <li class="material-row" [class.material-row-bad]="!m.sufficient || m.expired">
+                    <span>{{ m.name }}</span>
+                    <span class="material-qty">
+                      {{ m.inStock }} / {{ m.required }} {{ m.unit }}
+                      @if (m.expired) { <strong>EXPIRED</strong> }
+                      @else if (!m.sufficient) { <strong>SHORT</strong> }
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+
+            @for (w of r.warnings; track w.message) {
+              @if (w.code === 'assistant_recommended' || w.code === 'no_bill_of_materials') {
+                <p class="readiness-line readiness-note">{{ w.message }}</p>
+              }
+            }
+
+            @if (r.requiresAcknowledgement && r.canStart) {
+              <label class="ack-field">
+                <input
+                  type="checkbox"
+                  [checked]="acknowledged()"
+                  (change)="acknowledged.set(!acknowledged())"
+                />
+                <span>I have reviewed the warnings above</span>
+              </label>
+            }
+          </div>
+        }
+      }
+
+      @if (lifecycleError()) {
+        <p class="form-error">{{ lifecycleError() }}</p>
+      }
+
+      <div class="actions">
+        @if (appt.status === 'booked' && !appt.arrivedAt) {
+          <button
+            type="button"
+            class="action-btn action-btn-checkin"
+            [disabled]="lifecycleBusy()"
+            (click)="checkIn()"
+          >
+            Check in
+          </button>
+        }
+
+        @if (appt.status === 'booked' && authService.hasRole(['doctor', 'owner'])) {
+          <button
+            type="button"
+            class="action-btn action-btn-start"
+            [disabled]="
+              lifecycleBusy() ||
+              !readiness()?.canStart ||
+              (readiness()?.requiresAcknowledgement === true && !acknowledged())
+            "
+            (click)="startVisit()"
+          >
+            Start procedure
+          </button>
+        }
+
+        @if (appt.status === 'in_progress' && authService.hasRole(['doctor', 'owner'])) {
+          <button
+            type="button"
+            class="action-btn action-btn-done"
+            [disabled]="lifecycleBusy()"
+            (click)="completeVisit()"
+          >
+            Complete
+          </button>
+          @for (minutes of extensionChoices; track minutes) {
+            <button
+              type="button"
+              class="action-btn action-btn-extend"
+              [disabled]="lifecycleBusy()"
+              (click)="extendVisit(minutes)"
+            >
+              +{{ minutes }} min
+            </button>
+          }
+        }
+      </div>
+    </div>
+  }
+
+  @if (appt.status === 'done' && appt.actualStartAt) {
+    <div class="visit-section">
+      <h2 class="section-title">Visit record</h2>
+      <div class="visit-timeline">
+        @if (appt.arrivedAt) {
+          <span class="visit-step visit-step-done">
+            Arrived {{ formatTime(appt.arrivedAt) }}
+            @if (lateByMinutes(); as late) {
+              <span class="late-badge">{{ late }} min late</span>
+            }
+          </span>
+        }
+        <span class="visit-step visit-step-done">Started {{ formatTime(appt.actualStartAt) }}</span>
+        @if (appt.actualEndAt) {
+          <span class="visit-step visit-step-done">Ended {{ formatTime(appt.actualEndAt) }}</span>
+        }
+        @if (actualDurationMinutes(); as actual) {
+          <span class="visit-step">
+            Took {{ actual }} min (booked {{ appt.durationMin }})
+          </span>
+        }
+      </div>
+    </div>
+  }
+
+  @if (appt.status === 'done') {
+    <div class="visit-section">
+      <h2 class="section-title">Invoice</h2>
+      @if (invoiceLoading()) {
+        <p class="empty-state">Loading invoice...</p>
+      } @else if (invoice(); as inv) {
+        <div class="invoice-summary">
+          <a [routerLink]="['/dashboard/billing', inv.invoice.id]" class="invoice-link">
+            {{ inv.invoice.invoiceNumber }}
+          </a>
+          <app-status-pill
+            [tone]="invoiceStatusInfo(inv.invoice.status).tone"
+            [label]="invoiceStatusInfo(inv.invoice.status).label"
+          />
+          <span class="invoice-total">EGP {{ inv.totals.total.toFixed(0) }}</span>
+        </div>
+      } @else if (authService.hasRole(['receptionist', 'owner'])) {
+        <button type="button" class="action-btn action-btn-checkin" [disabled]="invoiceCreating()" (click)="createInvoice()">
+          {{ invoiceCreating() ? 'Creating...' : 'Create invoice' }}
+        </button>
+      } @else {
+        <p class="empty-state">No invoice yet.</p>
+      }
+    </div>
+  }
+
+  @if (updateError()) {
+    <p class="form-error">{{ updateError() }}</p>
+  }
+
+  @if (appt.status === 'booked' && authService.hasRole(['receptionist', 'doctor', 'owner'])) {
+    <div class="actions">
+      <button type="button" class="action-btn action-btn-done" [disabled]="updating()" (click)="updateStatus('done')">
+        Mark done
+      </button>
+      <button type="button" class="action-btn action-btn-noshow" [disabled]="updating()" (click)="updateStatus('no_show')">
+        Mark no-show
+      </button>
+      <button type="button" class="action-btn action-btn-cancel" [disabled]="updating()" (click)="updateStatus('cancelled')">
+        Cancel
+      </button>
+      <button type="button" class="action-btn action-btn-reschedule" (click)="toggleReschedule()">
+        {{ showReschedule() ? 'Cancel reschedule' : 'Reschedule' }}
+      </button>
+    </div>
+
+    @if (showReschedule()) {
+      <form class="reschedule-form" [formGroup]="rescheduleForm" (ngSubmit)="submitReschedule()">
+        <div class="reschedule-row">
+          <div class="field">
+            <label for="reschedule-date">New date</label>
+            <input id="reschedule-date" type="date" formControlName="date" class="native-input" />
+          </div>
+          <div class="field">
+            <label for="reschedule-time">New time</label>
+            <input id="reschedule-time" type="time" formControlName="time" class="native-input" />
+          </div>
+        </div>
+
+        @if (rescheduleError()) {
+          <p class="form-error">{{ rescheduleError() }}</p>
+        }
+
+        <button type="submit" class="submit-btn" [disabled]="rescheduling()">
+          {{ rescheduling() ? 'Rescheduling...' : 'Confirm new time' }}
+        </button>
+      </form>
+    }
+  }
+
+  <div class="reminders-section">
+    <h2 class="section-title">Reminders</h2>
+    @if (remindersLoading()) {
+      <p class="empty-state">Loading reminders...</p>
+    } @else if (reminders().length === 0) {
+      <p class="empty-state">No reminders queued for this appointment.</p>
+    } @else {
+      <ul class="reminder-list">
+        @for (reminder of reminders(); track reminder.id) {
+          <li class="reminder-row">
+            <span class="reminder-channel">{{ reminder.channel }}</span>
+            <span class="reminder-time">{{ formatDateTime(reminder.sendAt) }}</span>
+            <app-status-pill
+              [tone]="reminderStatusInfo(reminder.status).tone"
+              [label]="reminderStatusInfo(reminder.status).label"
+            />
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  <app-procedure-visit [appointmentId]="appt.id" />
+}

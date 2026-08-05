@@ -1,0 +1,65 @@
+<div class="panel">
+  <h2 class="section-title">Financial history</h2>
+
+  @if (loading()) {
+    <p class="empty-state">Loading financial history...</p>
+  } @else if (loadError() || !history()) {
+    <p class="empty-state empty-state-error">Couldn't load financial history.</p>
+  } @else {
+    @let h = history()!;
+
+    @if (h.totalOutstanding > 0) {
+      <p class="outstanding-note">Outstanding balance: {{ formatMoney(h.totalOutstanding) }}</p>
+    }
+
+    @if (h.invoices.length === 0) {
+      <p class="empty-state">No invoices yet.</p>
+    } @else {
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Invoice #</th>
+            <th>Issued</th>
+            <th>Total</th>
+            <th>Paid</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (invoice of h.invoices; track invoice.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/dashboard/billing', invoice.id]" class="invoice-link">
+                  {{ invoice.invoiceNumber }}
+                </a>
+              </td>
+              <td>{{ invoice.issueDate ?? '—' }}</td>
+              <td>{{ formatMoney(invoice.total) }}</td>
+              <td>{{ formatMoney(invoice.paidAmount) }}</td>
+              <td>
+                <app-status-pill
+                  [tone]="invoiceStatusInfo(invoice.status).tone"
+                  [label]="invoiceStatusInfo(invoice.status).label"
+                />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (h.paymentTimeline.length > 0) {
+        <h3 class="subsection-title">Payment timeline</h3>
+        <ul class="payment-list">
+          @for (payment of h.paymentTimeline; track $index) {
+            <li class="payment-row" [class.payment-row-refund]="payment.isRefund">
+              <span>{{ formatDate(payment.paidAt) }}</span>
+              <span class="muted">{{ payment.invoiceNumber }}</span>
+              <span class="muted">{{ payment.method }}</span>
+              <span>{{ payment.isRefund ? '-' : '' }}{{ formatMoney(payment.amount) }}</span>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</div>

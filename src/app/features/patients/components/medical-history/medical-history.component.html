@@ -1,0 +1,108 @@
+<section class="panel">
+  <div class="panel-head">
+    <div>
+      <h2 class="section-title">Medical history</h2>
+      <p class="section-hint">Allergies, conditions and medications reviewed before treatment.</p>
+    </div>
+    <button type="button" class="add-btn" (click)="toggleForm()">
+      {{ showForm() ? 'Cancel' : '+ Add entry' }}
+    </button>
+  </div>
+
+  @if (showForm()) {
+    <form class="entry-form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-row">
+        <label class="field">
+          <span class="field-label">Type</span>
+          <select formControlName="type">
+            @for (type of types; track type) {
+              <option [value]="type">{{ medicalTypeLabel(type) }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field field-grow">
+          <span class="field-label">Name</span>
+          <input type="text" formControlName="name" placeholder="e.g. Lidocaine, Hypertension, Warfarin" />
+        </label>
+
+        <label class="field">
+          <span class="field-label">Severity</span>
+          <select formControlName="severity">
+            @for (severity of severities; track severity) {
+              <option [value]="severity">{{ medicalSeverityInfo(severity).label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <label class="checkbox-field">
+        <input type="checkbox" formControlName="anesthesiaRelevant" />
+        <span>Affects anesthesia (heart condition, hypertension, blood thinner, anesthetic allergy)</span>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Notes (optional)</span>
+        <input type="text" formControlName="notes" placeholder="Any detail the clinician should know" />
+      </label>
+
+      @if (saveError()) {
+        <p class="form-error">{{ saveError() }}</p>
+      }
+
+      <button type="submit" class="save-btn" [disabled]="saving()">
+        {{ saving() ? 'Saving...' : 'Save entry' }}
+      </button>
+    </form>
+  }
+
+  @if (loading()) {
+    <p class="empty-state">Loading medical history...</p>
+  } @else if (loadError()) {
+    <p class="empty-state empty-state-error">Couldn't load medical history.</p>
+  } @else if (entries().length === 0) {
+    <p class="empty-state">No medical history recorded yet.</p>
+  } @else {
+    <ul class="entry-list">
+      @for (entry of activeEntries(); track entry.id) {
+        <li class="entry-row">
+          <div class="entry-main">
+            <div class="entry-title">
+              <span class="entry-name">{{ entry.name }}</span>
+              <app-status-pill
+                [tone]="medicalSeverityInfo(entry.severity).tone"
+                [label]="medicalSeverityInfo(entry.severity).label"
+              />
+              @if (entry.anesthesiaRelevant) {
+                <app-status-pill tone="red" label="Anesthesia" />
+              }
+            </div>
+            <span class="entry-meta">
+              {{ medicalTypeLabel(entry.type) }} &middot; recorded {{ formatDate(entry.recordedAt) }}
+              @if (entry.notes) {
+                &middot; {{ entry.notes }}
+              }
+            </span>
+          </div>
+          @if (authService.hasRole(['doctor', 'owner'])) {
+            <button type="button" class="retire-btn" (click)="retire(entry)">Retire</button>
+          }
+        </li>
+      }
+
+      @for (entry of retiredEntries(); track entry.id) {
+        <li class="entry-row entry-row-retired">
+          <div class="entry-main">
+            <div class="entry-title">
+              <span class="entry-name">{{ entry.name }}</span>
+              <app-status-pill tone="grey" label="Retired" />
+            </div>
+            <span class="entry-meta">
+              {{ medicalTypeLabel(entry.type) }} &middot; recorded {{ formatDate(entry.recordedAt) }}
+            </span>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

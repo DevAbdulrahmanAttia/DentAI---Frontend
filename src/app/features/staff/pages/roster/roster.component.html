@@ -1,0 +1,106 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Staff</h1>
+      <p class="subtitle">Manage clinic staff accounts.</p>
+    </div>
+    <button type="button" class="action-btn action-btn-primary" (click)="toggleAddForm()">
+      {{ showAddForm() ? 'Cancel' : '+ Add staff' }}
+    </button>
+  </div>
+
+  @if (showAddForm()) {
+    <section class="panel add-panel">
+      <h2>Add staff account</h2>
+      <form [formGroup]="addForm" (ngSubmit)="submitAdd()" class="add-form">
+        <div class="field">
+          <label for="name">Full name</label>
+          <input id="name" type="text" formControlName="name" class="native-input" />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" formControlName="email" class="native-input" />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" formControlName="password" class="native-input" placeholder="Min. 8 characters" />
+        </div>
+        <div class="field">
+          <label for="role">Role</label>
+          <select id="role" formControlName="role" class="native-select">
+            <option value="receptionist">Receptionist</option>
+            <option value="doctor">Doctor</option>
+            <option value="owner">Owner</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="phone">Phone (optional)</label>
+          <input id="phone" type="text" formControlName="phone" class="native-input" placeholder="e.g. +201000000000" />
+        </div>
+
+        @if (addError()) {
+          <p class="form-error">{{ addError() }}</p>
+        }
+
+        <button type="submit" class="submit-btn" [disabled]="adding()">
+          {{ adding() ? 'Creating...' : 'Create account' }}
+        </button>
+      </form>
+    </section>
+  }
+
+  <div class="panel">
+    @if (loading()) {
+      <p class="empty-state">Loading staff...</p>
+    } @else if (loadError()) {
+      <p class="empty-state empty-state-error">Couldn't load staff.</p>
+    } @else if (staff().length === 0) {
+      <p class="empty-state">No staff accounts yet.</p>
+    } @else {
+      <div class="table-wrap">
+        <table class="staff-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of staff(); track user.id) {
+              <tr>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td class="role-cell">{{ user.role }}</td>
+                <td>{{ user.phone || '—' }}</td>
+                <td>
+                  <app-status-pill
+                    [tone]="user.isActive ? 'green' : 'grey'"
+                    [label]="user.isActive ? 'Active' : 'Inactive'"
+                  />
+                </td>
+                <td class="actions-cell">
+                  @if (isSelf(user)) {
+                    <span class="self-note">You</span>
+                  } @else {
+                    <button
+                      type="button"
+                      class="toggle-btn"
+                      [disabled]="updatingId() === user.id"
+                      (click)="toggleActive(user)"
+                    >
+                      {{ user.isActive ? 'Deactivate' : 'Reactivate' }}
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,79 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Patients</h1>
+      <p class="subtitle">Search the patient roster or add a new one.</p>
+    </div>
+    @if (authService.hasRole(['receptionist', 'owner'])) {
+      <button type="button" class="action-btn action-btn-primary" (click)="toggleAddForm()">
+        + Add patient
+      </button>
+    }
+  </div>
+
+  @if (showAddForm()) {
+    <app-modal title="Add patient" (closed)="showAddForm.set(false)">
+      <app-patient-form mode="add" (saved)="onPatientAdded($event)" />
+    </app-modal>
+  }
+
+  <div class="toolbar">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search by name or phone..."
+      [formControl]="searchControl"
+    />
+
+    <select
+      class="risk-filter"
+      [value]="riskFilter()"
+      (change)="onRiskFilterChange($any($event.target).value)"
+    >
+      <option value="all">All risk levels</option>
+      <option value="low">Low risk</option>
+      <option value="medium">Medium risk</option>
+      <option value="high">High risk</option>
+    </select>
+  </div>
+
+  <div class="panel">
+    @if (loading()) {
+      <p class="empty-state">Loading patients...</p>
+    } @else if (loadError()) {
+      <p class="empty-state empty-state-error">Couldn't load patients.</p>
+    } @else if (filteredPatients().length === 0) {
+      <p class="empty-state">No patients found.</p>
+    } @else {
+      <ul class="patient-list">
+        @for (patient of pagedPatients(); track patient.id) {
+          <li class="patient-row">
+            <a class="patient-link" [routerLink]="['/dashboard/patients', patient.id]">
+              <span class="patient-name">{{ patient.name }}</span>
+              <span class="patient-phone">{{ patient.phone }}</span>
+              <span class="patient-email">{{ patient.email || '—' }}</span>
+              <span class="patient-risk">Risk score: {{ patient.noShowRiskScore }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button type="button" class="page-btn" [disabled]="currentPage() === 1" (click)="goToPrevPage()">
+            &larr; Prev
+          </button>
+          <span class="page-status">Page {{ currentPage() }} of {{ totalPages() }}</span>
+          <button
+            type="button"
+            class="page-btn"
+            [disabled]="currentPage() === totalPages()"
+            (click)="goToNextPage()"
+          >
+            Next &rarr;
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

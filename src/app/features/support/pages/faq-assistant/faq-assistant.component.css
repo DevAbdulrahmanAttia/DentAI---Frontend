@@ -1,0 +1,124 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text, #1e2b33);
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 13.5px;
+  color: var(--color-faint, #8a96a1);
+  margin: 4px 0 0;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--color-border, #e3e8ec);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text, #1e2b33);
+  margin: 0 0 12px;
+}
+
+.ask-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text, #1e2b33);
+}
+
+.native-textarea {
+  padding: 10px 12px;
+  border: 1.5px solid var(--color-border, #e1e7ea);
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.native-textarea:focus {
+  outline: none;
+  border-color: var(--color-teal, #0e7c86);
+}
+
+.form-error {
+  color: var(--color-red, #c4433d);
+  font-size: 12.5px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.submit-btn {
+  align-self: flex-start;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-navy, #0f2a47);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: var(--color-teal, #0e7c86);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.empty-state {
+  font-size: 13px;
+  color: var(--color-faint, #8a96a1);
+  margin: 0;
+}
+
+.response-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text, #1e2b33);
+  background: var(--color-background-muted, #f4f6f8);
+  border-radius: 9px;
+  padding: 14px 16px;
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+}
+
+.copy-btn {
+  padding: 8px 14px;
+  border-radius: 7px;
+  border: 1.5px solid var(--color-teal, #0e7c86);
+  background: #fff;
+  color: var(--color-teal, #0e7c86);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.copy-btn:hover {
+  background: var(--color-teal-light, #e3f1f2);
+}

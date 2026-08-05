@@ -1,0 +1,192 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Waitlist</h1>
+      <p class="subtitle">Patients waiting for an earlier or newly freed slot.</p>
+    </div>
+    @if (authService.hasRole(['receptionist', 'owner'])) {
+      <button type="button" class="action-btn action-btn-primary" (click)="toggleAddForm()">
+        {{ showAddForm() ? 'Cancel' : '+ Add to waitlist' }}
+      </button>
+    }
+  </div>
+
+  @if (showAddForm()) {
+    <section class="panel add-panel">
+      <h2>Add to waitlist</h2>
+
+      @if (selectedPatient(); as patient) {
+        <div class="selected-patient">
+          <div>
+            <span class="selected-patient-name">{{ patient.name }}</span>
+            <span class="selected-patient-phone">{{ patient.phone }}</span>
+          </div>
+          <button type="button" class="link-btn" (click)="clearSelectedPatient()">Change</button>
+        </div>
+      } @else {
+        <div class="patient-search">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search by name or phone..."
+            [formControl]="searchControl"
+          />
+          @if (searching()) {
+            <p class="hint">Searching...</p>
+          } @else if (searchResults().length > 0) {
+            <ul class="search-results">
+              @for (patient of searchResults(); track patient.id) {
+                <li>
+                  <button type="button" class="result-btn" (click)="selectPatient(patient)">
+                    <span class="result-name">{{ patient.name }}</span>
+                    <span class="result-phone">{{ patient.phone }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      <form [formGroup]="addForm" (ngSubmit)="submitAdd()" class="add-form">
+        <div class="accept-row">
+          <div class="field">
+            <label for="preferredDateFrom">From date</label>
+            <input id="preferredDateFrom" type="date" formControlName="preferredDateFrom" class="native-input" />
+          </div>
+          <div class="field">
+            <label for="preferredDateTo">To date (optional)</label>
+            <input id="preferredDateTo" type="date" formControlName="preferredDateTo" class="native-input" />
+          </div>
+          <div class="field">
+            <label for="preferredTimeStart">Earliest time (optional)</label>
+            <input id="preferredTimeStart" type="time" formControlName="preferredTimeStart" class="native-input" />
+          </div>
+          <div class="field">
+            <label for="preferredTimeEnd">Latest time (optional)</label>
+            <input id="preferredTimeEnd" type="time" formControlName="preferredTimeEnd" class="native-input" />
+          </div>
+        </div>
+
+        @if (addError()) {
+          <p class="form-error">{{ addError() }}</p>
+        }
+
+        <button type="submit" class="submit-btn" [disabled]="!selectedPatient() || adding()">
+          {{ adding() ? 'Adding...' : 'Add to waitlist' }}
+        </button>
+      </form>
+    </section>
+  }
+
+  <div class="filter-chips">
+    @for (filter of filters; track filter.value) {
+      <button
+        type="button"
+        class="filter-chip"
+        [class.filter-chip-active]="activeFilter() === filter.value"
+        (click)="setFilter(filter.value)"
+      >
+        {{ filter.label }}
+      </button>
+    }
+  </div>
+
+  <div class="panel">
+    @if (loading()) {
+      <p class="empty-state">Loading waitlist...</p>
+    } @else if (loadError()) {
+      <p class="empty-state empty-state-error">Couldn't load the waitlist.</p>
+    } @else if (entries().length === 0) {
+      <p class="empty-state">No entries here.</p>
+    } @else {
+      <ul class="entry-list">
+        @for (entry of entries(); track entry.id) {
+          <li class="entry-row">
+            <div class="entry-main">
+              <div class="entry-meta">
+                <span class="entry-name">{{ entry.patient.name }}</span>
+                <span class="entry-date">
+                  Prefers {{ formatDate(entry.preferredDateFrom) }}
+                  @if (entry.preferredDateTo) {
+                    – {{ formatDate(entry.preferredDateTo) }}
+                  }
+                  @if (entry.preferredTimeStart && entry.preferredTimeEnd) {
+                    ({{ entry.preferredTimeStart }}–{{ entry.preferredTimeEnd }})
+                  }
+                </span>
+              </div>
+              <div class="entry-actions">
+                <app-status-pill
+                  [tone]="waitlistPriorityInfo(entry.patient.noShowRiskScore).tone"
+                  [label]="waitlistPriorityInfo(entry.patient.noShowRiskScore).label"
+                />
+                <app-status-pill
+                  [tone]="waitlistStatusInfo(entry.status).tone"
+                  [label]="waitlistStatusInfo(entry.status).label"
+                />
+                @if (authService.hasRole(['receptionist', 'owner'])) {
+                  @if (entry.status === 'offered' && acceptingEntryId() !== entry.id) {
+                    <button type="button" class="action-btn action-btn-accept" (click)="startAccept(entry)">
+                      Accept
+                    </button>
+                  }
+                  <select
+                    class="status-select"
+                    [value]="entry.status"
+                    (change)="changeStatus(entry, $any($event.target).value)"
+                  >
+                    <option value="waiting">Waiting</option>
+                    <option value="offered">Offered</option>
+                    <option value="filled">Filled</option>
+                    <option value="expired">Expired</option>
+                  </select>
+                  <button
+                    type="button"
+                    class="action-btn action-btn-danger"
+                    [disabled]="removingEntryId() === entry.id"
+                    (click)="removeEntry(entry)"
+                  >
+                    {{ removingEntryId() === entry.id ? 'Removing...' : 'Delete' }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (acceptingEntryId() === entry.id) {
+              <form class="accept-form" [formGroup]="acceptForm" (ngSubmit)="submitAccept(entry)">
+                <div class="accept-row">
+                  <select formControlName="doctorId" class="native-select">
+                    <option value="" disabled>Doctor</option>
+                    @for (doctor of doctors(); track doctor.id) {
+                      <option [value]="doctor.id">{{ doctor.name }}</option>
+                    }
+                  </select>
+                  <select formControlName="procedureTypeId" class="native-select">
+                    <option value="" disabled>Procedure</option>
+                    @for (procedure of procedures(); track procedure.id) {
+                      <option [value]="procedure.id">{{ procedure.name }}</option>
+                    }
+                  </select>
+                  <input type="date" formControlName="date" class="native-input" />
+                  <input type="time" formControlName="time" class="native-input" />
+                </div>
+
+                @if (acceptError()) {
+                  <p class="form-error">{{ acceptError() }}</p>
+                }
+
+                <div class="accept-actions">
+                  <button type="submit" class="submit-btn submit-btn-sm" [disabled]="accepting()">
+                    {{ accepting() ? 'Booking...' : 'Confirm slot' }}
+                  </button>
+                  <button type="button" class="link-btn" (click)="cancelAccept()">Cancel</button>
+                </div>
+              </form>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>

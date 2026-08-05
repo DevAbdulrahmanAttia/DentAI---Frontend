@@ -8,14 +8,18 @@
 import { inject, Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { StorageService } from '@core/services/storage.service';
 import { API_ENDPOINTS } from '@core/constants/api-endpoints';
 import { STORAGE_KEYS } from '@core/constants/storage-keys';
 import { API_URL } from '@core/tokens/api-url.token';
 import { AuthResponse, LoginCredentials, User, UserRole } from '@core/models/auth.model';
 import { environment } from '@env/environment';
+
+export interface MessageResponse {
+  message: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -35,67 +39,32 @@ export class AuthService {
   /**
    * Executes authentication request against the backend endpoint,
    * stores JWT token and user details via StorageService, and updates reactive state.
-   * Accepts LoginCredentials object or (email, role, password).
    */
-  login(
-    credentialsOrEmail: LoginCredentials | string,
-    role?: UserRole,
-    password?: string
-  ): Observable<AuthResponse> {
-    let credentials: LoginCredentials;
-    if (typeof credentialsOrEmail === 'string') {
-      credentials = {
-        email: credentialsOrEmail,
-        role: role ?? 'owner',
-        password: password ?? 'password123'
-      };
-    } else {
-      credentials = credentialsOrEmail;
-    }
-
+  login(credentials: LoginCredentials): Observable<AuthResponse> {
     const endpointUrl = `${this.apiUrl}${API_ENDPOINTS.AUTH.LOGIN}`;
 
     return this.http.post<AuthResponse>(endpointUrl, credentials).pipe(
       tap((response) => {
-        this.setSession(response.token, response.user);
-      }),
-      catchError((error) => {
-        // Fallback for development if backend server is not running
-        if (!environment.production && (error.status === 0 || error.status === 404)) {
-          const roleStr = String(credentials.role || 'owner').toLowerCase();
-          const mockUser: User = {
-            id: 'usr_' + Math.random().toString(36).substring(2, 9),
-            email: credentials.email,
-            role: credentials.role ?? 'owner',
-            name: roleStr.includes('doc')
-              ? 'Dr. Zaki'
-              : roleStr.includes('recept')
-                ? 'Receptionist User'
-                : 'Amina Hassan'
-          };
-          const mockToken = `mock-jwt-token-${mockUser.role}-${Date.now()}`;
-          const mockResponse: AuthResponse = { token: mockToken, user: mockUser };
-          this.setSession(mockResponse.token, mockResponse.user);
-          return of(mockResponse);
-        }
-        return throwError(() => error);
+        this.setSession(response.accessToken, response.user);
       })
     );
   }
 
   /**
-   * Resets password using user-provided new password and optional verification code.
+   * Requests a password-reset code (delivered over WhatsApp by the backend)
+   * for the account registered under this phone number.
    */
-  resetPassword(newPassword: string, code?: string): Observable<boolean> {
-    const endpointUrl = `${this.apiUrl}/auth/reset-password`;
-    return this.http.post<boolean>(endpointUrl, { newPassword, code }).pipe(
-      catchError((error) => {
-        if (!environment.production && (error.status === 0 || error.status === 404)) {
-          return of(true);
-        }
-        return throwError(() => error);
-      })
-    );
+  requestPasswordReset(phone: string): Observable<MessageResponse> {
+    const endpointUrl = `${this.apiUrl}${API_ENDPOINTS.AUTH.FORGOT_PASSWORD}`;
+    return this.http.post<MessageResponse>(endpointUrl, { phone });
+  }
+
+  /**
+   * Completes a password reset using the WhatsApp-delivered code.
+   */
+  resetPassword(phone: string, code: string, newPassword: string): Observable<MessageResponse> {
+    const endpointUrl = `${this.apiUrl}${API_ENDPOINTS.AUTH.RESET_PASSWORD}`;
+    return this.http.post<MessageResponse>(endpointUrl, { phone, code, newPassword });
   }
 
   /**
@@ -106,7 +75,7 @@ export class AuthService {
     this.storageService.removeItem(STORAGE_KEYS.USER_DATA);
     this.token.set(null);
     this.currentUser.set(null);
-    this.router.navigate(['/login']);
+    this.router.navigate(['/auth/login']);
   }
 
   /**
@@ -127,6 +96,15 @@ export class AuthService {
 
   getUser(): User | null {
     return this.currentUser();
+  }
+
+  /**
+   * Refreshes the stored user + signal after a self-service profile edit,
+   * without touching the token (unlike setSession, which is login-only).
+   */
+  updateStoredUser(user: User): void {
+    this.storageService.setItem(STORAGE_KEYS.USER_DATA, user);
+    this.currentUser.set(user);
   }
 
   private setSession(token: string, user: User): void {

@@ -1,0 +1,161 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Appointments</h1>
+      <p class="subtitle">{{ dateLabel() }}</p>
+    </div>
+    @if (authService.hasRole(['receptionist', 'owner'])) {
+      <button type="button" class="action-btn action-btn-primary" (click)="showBookModal.set(true)">
+        + New appointment
+      </button>
+    }
+  </div>
+
+  <div class="toolbar">
+    <div class="date-nav">
+      <button type="button" class="nav-btn" (click)="goToPrev()" aria-label="Previous">&larr;</button>
+      <button type="button" class="nav-btn nav-btn-today" (click)="goToToday()">Today</button>
+      <button type="button" class="nav-btn" (click)="goToNext()" aria-label="Next">&rarr;</button>
+    </div>
+
+    <div class="view-toggle">
+      <button type="button" class="view-btn" [class.view-btn-active]="viewMode() === 'day'" (click)="setView('day')">
+        Day
+      </button>
+      <button type="button" class="view-btn" [class.view-btn-active]="viewMode() === 'week'" (click)="setView('week')">
+        Week
+      </button>
+      <button type="button" class="view-btn" [class.view-btn-active]="viewMode() === 'month'" (click)="setView('month')">
+        Month
+      </button>
+    </div>
+
+    <select
+      class="doctor-filter"
+      [value]="selectedDoctorId()"
+      (change)="onDoctorFilterChange($any($event.target).value)"
+    >
+      <option value="">All doctors</option>
+      @for (doctor of doctors(); track doctor.id) {
+        <option [value]="doctor.id">{{ doctor.name }}</option>
+      }
+    </select>
+
+    <select
+      class="risk-filter"
+      [value]="selectedRiskLevel()"
+      (change)="onRiskFilterChange($any($event.target).value)"
+    >
+      <option value="all">All risk levels</option>
+      <option value="high">High risk</option>
+      <option value="medium">Medium risk</option>
+      <option value="low">Low risk</option>
+    </select>
+  </div>
+
+  @if (loading()) {
+    <p class="empty-state">Loading appointments...</p>
+  } @else if (loadError()) {
+    <p class="empty-state empty-state-error">Couldn't load appointments.</p>
+  } @else {
+    @switch (viewMode()) {
+      @case ('day') {
+        <div class="panel">
+          @if (visibleAppointments().length === 0) {
+            <p class="empty-state">No appointments for this day.</p>
+          } @else {
+            <ul class="appt-list">
+              @for (appt of visibleAppointments(); track appt.id) {
+                <li class="appt-row">
+                  <button type="button" class="appt-link" (click)="openAppointment(appt)">
+                    <span class="appt-time">{{ formatTime(appt.scheduledAt) }}</span>
+                    <span class="appt-patient">{{ appt.patient.name }}</span>
+                    <span class="appt-doctor">{{ appt.doctor.name || 'Unassigned' }}</span>
+                    <span class="appt-procedure">{{ appt.procedureType.name }}</span>
+                    <span class="appt-pills">
+                      @if (appt.riskLevel) {
+                        <app-status-pill
+                          [tone]="riskLevelInfo(appt.riskLevel).tone"
+                          [label]="riskLevelInfo(appt.riskLevel).label"
+                        />
+                      }
+                      <app-status-pill
+                        [tone]="appointmentStatusInfo(appt.status).tone"
+                        [label]="appointmentStatusInfo(appt.status).label"
+                      />
+                    </span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      @case ('week') {
+        <div class="week-grid">
+          @for (day of weekDays(); track day.getTime()) {
+            <div class="week-column">
+              <button type="button" class="week-column-header" (click)="openDay(day)">
+                <span class="week-day-name">{{ day.toLocaleDateString([], { weekday: 'short' }) }}</span>
+                <span class="week-day-num">{{ day.getDate() }}</span>
+              </button>
+              <div class="week-column-body">
+                @for (appt of appointmentsFor(day); track appt.id) {
+                  <button type="button" class="week-entry" (click)="openAppointment(appt)">
+                    <span class="week-entry-dot" [class]="'dot-' + appointmentStatusInfo(appt.status).tone"></span>
+                    <span class="week-entry-time">{{ formatTime(appt.scheduledAt) }}</span>
+                    <span class="week-entry-name">{{ appt.patient.name }}</span>
+                  </button>
+                }
+                @if (appointmentsFor(day).length === 0) {
+                  <span class="week-entry-empty">—</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      @case ('month') {
+        <div class="month-grid">
+          @for (label of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; track label) {
+            <div class="month-weekday-label">{{ label }}</div>
+          }
+          @for (cell of monthGrid(); track cell.date.getTime()) {
+            <button
+              type="button"
+              class="month-cell"
+              [class.month-cell-outside]="!cell.inCurrentMonth"
+              (click)="openDay(cell.date)"
+            >
+              <span class="month-cell-num">{{ cell.date.getDate() }}</span>
+              <div class="month-cell-entries">
+                @for (appt of appointmentsFor(cell.date).slice(0, 3); track appt.id) {
+                  <span class="month-entry" [class]="'dot-' + appointmentStatusInfo(appt.status).tone">
+                    {{ formatTime(appt.scheduledAt) }} {{ appt.patient.name }}
+                  </span>
+                }
+                @if (appointmentsFor(cell.date).length > 3) {
+                  <span class="month-entry-more">+{{ appointmentsFor(cell.date).length - 3 }} more</span>
+                }
+              </div>
+            </button>
+          }
+        </div>
+      }
+    }
+  }
+
+  @if (showBookModal()) {
+    <app-modal title="Book appointment" (closed)="showBookModal.set(false)">
+      <app-book-appointment-form (booked)="onBooked($event)" />
+    </app-modal>
+  }
+
+  @if (selectedAppointmentId(); as appointmentId) {
+    <app-modal variant="sheet" (closed)="closeAppointmentSheet()">
+      <app-appointment-details-panel [appointmentId]="appointmentId" (updated)="onAppointmentUpdated()" />
+    </app-modal>
+  }
+</div>

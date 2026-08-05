@@ -1,0 +1,56 @@
+<div class="procedure-visit">
+  <h2 class="section-title">Materials used</h2>
+
+  @if (usageLoading()) {
+    <p class="empty-state">Loading materials...</p>
+  } @else if (loggedUsage().length === 0) {
+    <p class="empty-state">No materials logged for this visit yet.</p>
+  } @else {
+    <ul class="usage-list">
+      @for (entry of loggedUsage(); track entry.id) {
+        <li class="usage-row">
+          <span class="usage-name">{{ entry.inventoryItem.name }}</span>
+          <span class="usage-qty">{{ entry.quantityUsed }} {{ entry.inventoryItem.unit }}</span>
+          <span class="usage-cost">EGP {{ entry.unitCostAtTime }} each</span>
+          <span class="usage-time">{{ formatDateTime(entry.loggedAt) }}</span>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (authService.hasRole('doctor')) {
+    @if (itemsLoading()) {
+      <p class="empty-state">Loading inventory...</p>
+    } @else if (items().length === 0) {
+      <p class="empty-state">No inventory items to log.</p>
+    } @else {
+      <div class="checklist">
+        @for (item of items(); track item.id; let i = $index) {
+          <div class="checklist-row" [formGroup]="checklist.at(i)">
+            <label class="checklist-check">
+              <input type="checkbox" formControlName="checked" [disabled]="+item.quantityInStock === 0" />
+              {{ item.name }}
+              <span class="checklist-stock">({{ item.quantityInStock }} {{ item.unit }} available)</span>
+            </label>
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              formControlName="quantity"
+              class="checklist-qty"
+              [attr.aria-label]="'Quantity of ' + item.name"
+            />
+          </div>
+        }
+      </div>
+
+      @if (submitError()) {
+        <p class="form-error">{{ submitError() }}</p>
+      }
+
+      <button type="button" class="submit-btn" [disabled]="submitting()" (click)="submitChecklist()">
+        {{ submitting() ? 'Logging...' : 'Log materials' }}
+      </button>
+    }
+  }
+</div>

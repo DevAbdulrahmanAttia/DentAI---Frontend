@@ -1,0 +1,84 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Billing</h1>
+      <p class="subtitle">Invoices, payments, and daily cash closing.</p>
+    </div>
+    <a class="btn btn-secondary" routerLink="/dashboard/billing/daily-closing">Daily cash closing</a>
+  </header>
+
+  <div class="toolbar">
+    <input
+      class="search-input"
+      type="text"
+      placeholder="Search by invoice # or patient name..."
+      [formControl]="searchControl"
+    />
+    <div class="filter-tabs">
+      <button
+        type="button"
+        class="filter-tab"
+        [class.active]="statusFilter() === 'all'"
+        (click)="onStatusFilterChange('all')"
+      >
+        All
+      </button>
+      @for (status of statuses; track status) {
+        <button
+          type="button"
+          class="filter-tab"
+          [class.active]="statusFilter() === status"
+          (click)="onStatusFilterChange(status)"
+        >
+          {{ invoiceStatusInfo(status).label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="hint">Loading invoices...</p>
+  } @else if (loadError()) {
+    <p class="error">Couldn't load invoices.</p>
+  } @else if (filteredInvoices.length === 0) {
+    <p class="hint">No invoices match this filter.</p>
+  } @else {
+    <table class="invoices-table">
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Patient</th>
+          <th>Doctor</th>
+          <th>Issued</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (invoice of pagedInvoices; track invoice.id) {
+          <tr [routerLink]="['/dashboard/billing', invoice.id]" class="row-link">
+            <td class="invoice-number">{{ invoice.invoiceNumber }}</td>
+            <td>{{ invoice.patient.name }}</td>
+            <td>{{ invoice.doctor.name }}</td>
+            <td>{{ invoice.issueDate ?? '—' }}</td>
+            <td>{{ formatMoney(itemsSubtotal(invoice)) }}</td>
+            <td>
+              <app-status-pill
+                [tone]="invoiceStatusInfo(invoice.status).tone"
+                [label]="invoiceStatusInfo(invoice.status).label"
+              />
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (pageCount > 1) {
+      <div class="pagination">
+        <button type="button" class="page-btn" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">Previous</button>
+        <span class="page-info">Page {{ page() }} of {{ pageCount }} · {{ filteredInvoices.length }} invoices</span>
+        <button type="button" class="page-btn" [disabled]="page() >= pageCount" (click)="goToPage(page() + 1)">Next</button>
+      </div>
+    }
+  }
+</div>

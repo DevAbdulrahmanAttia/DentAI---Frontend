@@ -1,0 +1,50 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>AI Assistant</h1>
+      <p class="subtitle">Draft a reply to a patient's question — review before sending.</p>
+    </div>
+  </div>
+
+  <section class="panel">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="ask-form">
+      <div class="field">
+        <label for="question">Patient's question</label>
+        <textarea
+          id="question"
+          formControlName="question"
+          class="native-textarea"
+          rows="4"
+          placeholder="e.g. How much does a root canal cost, and how long does it take?"
+        ></textarea>
+        @if (form.get('question')?.touched && form.get('question')?.hasError('required')) {
+          <p class="form-error">A question is required.</p>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <p class="form-error">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" class="submit-btn" [disabled]="loading()">
+        {{ loading() ? 'Drafting...' : 'Suggest a reply' }}
+      </button>
+    </form>
+  </section>
+
+  @if (suggestedResponse() !== undefined) {
+    <section class="panel">
+      <h2 class="section-title">Suggested reply</h2>
+      @if (suggestedResponse() === null) {
+        <p class="empty-state">
+          AI suggestions aren't available right now — the assistant isn't connected. Answer the patient directly for now.
+        </p>
+      } @else {
+        <p class="response-text">{{ suggestedResponse() }}</p>
+        <button type="button" class="copy-btn" (click)="copyResponse()">
+          {{ copied() ? 'Copied!' : 'Copy to clipboard' }}
+        </button>
+      }
+    </section>
+  }
+</div>

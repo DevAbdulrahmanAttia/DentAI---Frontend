@@ -1,0 +1,190 @@
+<div class="page">
+  <div class="panel-header">
+    <div>
+      <h1>Settings</h1>
+      <p class="subtitle">Manage your clinic and account.</p>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    @if (authService.hasRole('owner')) {
+      <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'clinic'" (click)="setTab('clinic')">
+        Clinic Profile &amp; Hours
+      </button>
+      <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'notifications'" (click)="setTab('notifications')">
+        Notifications
+      </button>
+    }
+    <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'account'" (click)="setTab('account')">
+      My Account
+    </button>
+  </div>
+
+  @if (activeTab() === 'clinic' && authService.hasRole('owner')) {
+    <div class="panel">
+      <h2 class="section-title">Clinic profile &amp; hours</h2>
+
+      @if (clinicLoading()) {
+        <p class="empty-state">Loading...</p>
+      } @else if (clinicLoadError()) {
+        <p class="empty-state empty-state-error">Couldn't load clinic settings.</p>
+      } @else {
+        <form class="settings-form" [formGroup]="clinicForm" (ngSubmit)="saveClinicProfile()">
+          <div class="field">
+            <label for="clinicName">Clinic name</label>
+            <input id="clinicName" type="text" formControlName="clinicName" class="native-input" />
+          </div>
+          <div class="field">
+            <label for="address">Address</label>
+            <input id="address" type="text" formControlName="address" class="native-input" />
+          </div>
+          <div class="field">
+            <label for="clinicPhone">Phone</label>
+            <input id="clinicPhone" type="text" formControlName="phone" class="native-input" />
+          </div>
+
+          <div class="field">
+            <span class="field-label-static">Working days</span>
+            <div class="weekday-row">
+              @for (day of weekdays; track day.value) {
+                <button
+                  type="button"
+                  class="weekday-chip"
+                  [class.weekday-chip-active]="isWorkingDaySelected(day.value)"
+                  (click)="toggleWorkingDay(day.value)"
+                >
+                  {{ day.label }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="workingHoursStart">Opens at</label>
+              <input id="workingHoursStart" type="time" formControlName="workingHoursStart" class="native-input" />
+            </div>
+            <div class="field">
+              <label for="workingHoursEnd">Closes at</label>
+              <input id="workingHoursEnd" type="time" formControlName="workingHoursEnd" class="native-input" />
+            </div>
+          </div>
+
+          @if (clinicSaveError()) {
+            <p class="form-error">{{ clinicSaveError() }}</p>
+          }
+          @if (clinicSaved()) {
+            <p class="form-success">Clinic profile saved.</p>
+          }
+
+          <div class="form-actions">
+            <button type="submit" class="submit-btn" [disabled]="clinicSaving()">
+              {{ clinicSaving() ? 'Saving...' : 'Save changes' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+
+  @if (activeTab() === 'notifications' && authService.hasRole('owner')) {
+    <div class="panel">
+      <h2 class="section-title">Notification preferences</h2>
+      <p class="subtitle">Comma-separated hours before the appointment to send a reminder.</p>
+
+      @if (clinicLoading()) {
+        <p class="empty-state">Loading...</p>
+      } @else if (clinicLoadError()) {
+        <p class="empty-state empty-state-error">Couldn't load notification settings.</p>
+      } @else {
+        <form class="settings-form" [formGroup]="notificationsForm" (ngSubmit)="saveNotificationPreferences()">
+          <div class="field">
+            <label for="standardLeadHours">Standard reminder lead time (hours)</label>
+            <input id="standardLeadHours" type="text" formControlName="standardReminderLeadHours" class="native-input" placeholder="e.g. 24" />
+          </div>
+          <div class="field">
+            <label for="highRiskLeadHours">High-risk patient reminder lead times (hours)</label>
+            <input id="highRiskLeadHours" type="text" formControlName="highRiskReminderLeadHours" class="native-input" placeholder="e.g. 48, 24, 3" />
+          </div>
+
+          @if (notificationsSaveError()) {
+            <p class="form-error">{{ notificationsSaveError() }}</p>
+          }
+          @if (notificationsSaved()) {
+            <p class="form-success">Notification preferences saved.</p>
+          }
+
+          <div class="form-actions">
+            <button type="submit" class="submit-btn" [disabled]="notificationsSaving()">
+              {{ notificationsSaving() ? 'Saving...' : 'Save changes' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+
+  @if (activeTab() === 'account') {
+    <div class="panel">
+      <h2 class="section-title">My account</h2>
+      <form class="settings-form" [formGroup]="accountForm" (ngSubmit)="saveAccount()">
+        <div class="field">
+          <label for="name">Full name</label>
+          <input id="name" type="text" formControlName="name" class="native-input" />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" formControlName="email" class="native-input" />
+        </div>
+        <div class="field">
+          <label for="accountPhone">Phone</label>
+          <input id="accountPhone" type="text" formControlName="phone" class="native-input" />
+        </div>
+
+        @if (accountSaveError()) {
+          <p class="form-error">{{ accountSaveError() }}</p>
+        }
+        @if (accountSaved()) {
+          <p class="form-success">Profile saved.</p>
+        }
+
+        <div class="form-actions">
+          <button type="submit" class="submit-btn" [disabled]="accountSaving()">
+            {{ accountSaving() ? 'Saving...' : 'Save changes' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2 class="section-title">Change password</h2>
+      <form class="settings-form" [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+        <div class="field">
+          <label for="currentPassword">Current password</label>
+          <input id="currentPassword" type="password" formControlName="currentPassword" class="native-input" />
+        </div>
+        <div class="field">
+          <label for="newPassword">New password</label>
+          <input id="newPassword" type="password" formControlName="newPassword" class="native-input" />
+        </div>
+        <div class="field">
+          <label for="confirmPassword">Confirm new password</label>
+          <input id="confirmPassword" type="password" formControlName="confirmPassword" class="native-input" />
+        </div>
+
+        @if (passwordSaveError()) {
+          <p class="form-error">{{ passwordSaveError() }}</p>
+        }
+        @if (passwordSaved()) {
+          <p class="form-success">Password updated.</p>
+        }
+
+        <div class="form-actions">
+          <button type="submit" class="submit-btn" [disabled]="passwordSaving()">
+            {{ passwordSaving() ? 'Updating...' : 'Update password' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

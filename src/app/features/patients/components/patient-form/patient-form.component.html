@@ -1,0 +1,30 @@
+<form class="patient-form" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="field">
+    <label for="name">Full name</label>
+    <input id="name" type="text" formControlName="name" class="native-input" placeholder="Patient name" />
+  </div>
+  <div class="field">
+    <label for="phone">Phone</label>
+    <input id="phone" type="text" formControlName="phone" class="native-input" placeholder="e.g. +201000000000" />
+  </div>
+  <div class="field">
+    <label for="email">Email</label>
+    <input id="email" type="email" formControlName="email" class="native-input" placeholder="patient@email.com" />
+  </div>
+  <div class="field">
+    <label for="dateOfBirth">Date of birth</label>
+    <input id="dateOfBirth" type="date" formControlName="dateOfBirth" class="native-input" />
+  </div>
+  <div class="field">
+    <label for="medicalNotes">Medical notes</label>
+    <textarea id="medicalNotes" formControlName="medicalNotes" class="notes-input" rows="3"></textarea>
+  </div>
+
+  @if (saveError) {
+    <p class="form-error">{{ saveError }}</p>
+  }
+
+  <div class="form-actions">
+    <button type="submit" class="submit-btn" [disabled]="isSaving">{{ submitLabel }}</button>
+  </div>
+</form>

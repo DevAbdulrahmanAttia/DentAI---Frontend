@@ -13,6 +13,6 @@
 export const environment = {
   production: false,
   appName: 'DentAI',
-  apiUrl: 'http://localhost:8000/api/v1',
+  apiUrl: 'http://localhost:3000',
   version: '1.0.0'
 };

@@ -1,0 +1,112 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.confirm-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(120% 130% at 20% 15%, #123a5e 0%, var(--color-navy-deep, #0a1d33) 55%, #08141f 100%);
+  box-sizing: border-box;
+}
+
+.confirm-card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 28px;
+  box-sizing: border-box;
+  box-shadow: 0 20px 45px rgba(8, 20, 31, 0.35);
+}
+
+.brand {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-teal, #0e7c86);
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text, #1e2b33);
+  margin: 0 0 8px;
+}
+
+.lead {
+  font-size: 13.5px;
+  color: var(--color-faint, #8a96a1);
+  margin: 0 0 20px;
+}
+
+.status-text {
+  font-size: 14px;
+  color: var(--color-faint, #8a96a1);
+  text-align: center;
+  padding: 20px 0;
+  margin: 0;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 14px;
+  margin: 0 0 24px;
+  padding: 16px 18px;
+  background: var(--color-background-muted, #f4f6f8);
+  border-radius: 10px;
+}
+
+.details dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-faint, #8a96a1);
+}
+
+.details dd {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text, #1e2b33);
+  margin: 0;
+}
+
+.confirm-btn {
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: 10px;
+  border: none;
+  background: var(--color-navy, #0f2a47);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirm-btn:hover {
+  background: var(--color-teal, #0e7c86);
+}
+
+.result {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.result p {
+  font-size: 13.5px;
+  color: var(--color-faint, #8a96a1);
+  margin: 0;
+}
+
+.result-success h1 {
+  color: var(--color-teal, #0e7c86);
+}
+
+.result-error h1 {
+  color: var(--color-red, #c4433d);
+}

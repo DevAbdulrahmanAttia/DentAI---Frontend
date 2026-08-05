@@ -1,0 +1,160 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Doctor Schedules</h1>
+      <p class="subtitle">Set each doctor's weekly working hours and one-off exceptions like time off.</p>
+    </div>
+  </header>
+
+  <div class="doctor-picker">
+    <label for="doctor-select">Doctor</label>
+    <select id="doctor-select" class="native-select" (change)="onDoctorChange($event)">
+      @for (doctor of doctors(); track doctor.id) {
+        <option [value]="doctor.id" [selected]="doctor.id === selectedDoctorId()">{{ doctor.name }}</option>
+      }
+    </select>
+  </div>
+
+  @if (doctors().length === 0) {
+    <p class="empty-state">No doctors on staff yet.</p>
+  } @else {
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Weekly hours</h2>
+        @if (!hasCustomSchedule()) {
+          <span class="fallback-note">Using the clinic's default hours until a day is set below.</span>
+        }
+      </div>
+
+      @if (dayError()) {
+        <p class="form-error">{{ dayError() }}</p>
+      }
+
+      <div class="table-wrap">
+        <table class="days-table">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Start</th>
+              <th>End</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (day of days(); track day.weekday) {
+              <tr>
+                <td class="day-label">{{ day.label }}</td>
+                <td>
+                  <input
+                    type="time"
+                    class="native-input"
+                    [value]="day.startTime"
+                    (change)="day.startTime = $any($event.target).value"
+                  />
+                </td>
+                <td>
+                  <input
+                    type="time"
+                    class="native-input"
+                    [value]="day.endTime"
+                    (change)="day.endTime = $any($event.target).value"
+                  />
+                </td>
+                <td class="actions-cell">
+                  <button
+                    type="button"
+                    class="save-btn"
+                    [disabled]="savingDay() === day.weekday"
+                    (click)="saveDay(day)"
+                  >
+                    Save
+                  </button>
+                  @if (day.configured) {
+                    <button
+                      type="button"
+                      class="clear-btn"
+                      [disabled]="savingDay() === day.weekday"
+                      (click)="clearDay(day)"
+                    >
+                      Off
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Exceptions</h2>
+        <button type="button" class="action-btn-primary" (click)="toggleExceptionForm()">
+          {{ showExceptionForm() ? 'Cancel' : '+ Add exception' }}
+        </button>
+      </div>
+
+      @if (showExceptionForm()) {
+        <form [formGroup]="exceptionForm" (ngSubmit)="submitException()" class="exception-form">
+          <div class="field">
+            <label for="exc-date">Date</label>
+            <input id="exc-date" type="date" formControlName="date" class="native-input" />
+          </div>
+          <div class="field">
+            <label for="exc-type">Type</label>
+            <select id="exc-type" formControlName="type" class="native-select">
+              @for (type of exceptionTypes; track type) {
+                <option [value]="type">{{ type === 'time_off' ? 'Time off' : 'Custom hours' }}</option>
+              }
+            </select>
+          </div>
+          @if (exceptionForm.value.type === 'custom_hours') {
+            <div class="field">
+              <label for="exc-start">Start</label>
+              <input id="exc-start" type="time" formControlName="startTime" class="native-input" />
+            </div>
+            <div class="field">
+              <label for="exc-end">End</label>
+              <input id="exc-end" type="time" formControlName="endTime" class="native-input" />
+            </div>
+          }
+          <div class="field field-wide">
+            <label for="exc-reason">Reason (optional)</label>
+            <input id="exc-reason" type="text" formControlName="reason" class="native-input" placeholder="e.g. Conference" />
+          </div>
+
+          @if (exceptionError()) {
+            <p class="form-error">{{ exceptionError() }}</p>
+          }
+
+          <button type="submit" class="submit-btn" [disabled]="addingException()">
+            {{ addingException() ? 'Adding...' : 'Add exception' }}
+          </button>
+        </form>
+      }
+
+      @if (exceptions().length === 0) {
+        <p class="empty-state">No exceptions on record.</p>
+      } @else {
+        <ul class="exceptions-list">
+          @for (exception of exceptions(); track exception.id) {
+            <li class="exception-row">
+              <div class="exception-meta">
+                <span class="exception-date">{{ exception.date }}</span>
+                <span class="exception-detail">
+                  @if (exception.type === 'time_off') {
+                    Off @if (exception.reason) { — {{ exception.reason }} }
+                  } @else {
+                    {{ exception.startTime }}–{{ exception.endTime }} @if (exception.reason) { — {{ exception.reason }} }
+                  }
+                </span>
+              </div>
+              <button type="button" class="remove-btn" (click)="removeException(exception)">Remove</button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</div>

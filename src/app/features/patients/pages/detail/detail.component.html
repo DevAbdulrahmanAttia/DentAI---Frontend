@@ -1,0 +1,118 @@
+<div class="page">
+  <a class="back-link" routerLink="/dashboard/patients">&larr; Back to patients</a>
+
+  @if (loading()) {
+    <p class="empty-state">Loading patient...</p>
+  } @else if (loadError() || !patient()) {
+    <p class="empty-state empty-state-error">Couldn't load this patient.</p>
+  } @else {
+    @let p = patient()!;
+
+    <div class="panel">
+      <div class="panel-header">
+        <div>
+          <h1>{{ p.name }}</h1>
+          <p class="subtitle">Patient since {{ formatDate(p.createdAt) }}</p>
+        </div>
+        @if (authService.hasRole(['receptionist', 'owner'])) {
+          <button type="button" class="action-btn" (click)="editing.set(true)">Edit</button>
+        }
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">Phone</span>
+          <span class="detail-value">{{ p.phone }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Email</span>
+          <span class="detail-value">{{ p.email || '—' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Date of birth</span>
+          <span class="detail-value">{{ p.dateOfBirth || '—' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">No-show risk score</span>
+          <span class="detail-value">{{ p.noShowRiskScore }}</span>
+        </div>
+      </div>
+
+      @if (p.medicalNotes) {
+        <div class="notes-block">
+          <span class="detail-label">Medical notes</span>
+          <p class="notes-text">{{ p.medicalNotes }}</p>
+        </div>
+      }
+    </div>
+
+    @if (p.attendanceSummary; as summary) {
+      <div class="summary-grid">
+        <div class="summary-card">
+          <span class="summary-label">Total visits</span>
+          <span class="summary-value">{{ summary.totalVisits }}</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">No-shows</span>
+          <span class="summary-value">{{ summary.noShowCount }}</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Cancellation rate</span>
+          <span class="summary-value">{{ summary.cancellationRate }}%</span>
+        </div>
+      </div>
+    }
+
+    <div class="panel">
+      <h2 class="section-title">Past treatments</h2>
+      @if (!p.appointments || p.appointments.length === 0) {
+        <p class="empty-state">No appointments yet.</p>
+      } @else {
+        <ul class="treatment-list">
+          @for (appt of p.appointments; track appt.id) {
+            <li class="treatment-row">
+              <span class="treatment-date">{{ formatDate(appt.scheduledAt) }}</span>
+              <span class="treatment-procedure">{{ appt.procedureName }}</span>
+              <span class="treatment-doctor">{{ appt.doctorName }}</span>
+              <span class="treatment-price">{{ formatPrice(appt.finalPrice) }}</span>
+              <app-status-pill
+                [tone]="appointmentStatusInfo(appt.status).tone"
+                [label]="appointmentStatusInfo(appt.status).label"
+              />
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <app-medical-history [patientId]="p.id" />
+
+    @if (authService.hasRole(['receptionist', 'owner'])) {
+      <app-financial-history [patientId]="p.id" />
+    }
+
+    <div class="panel">
+      <h2 class="section-title">Patient-friendly summary (AI)</h2>
+      @if (treatmentSummary() === undefined) {
+        <button
+          type="button"
+          class="action-btn"
+          [disabled]="treatmentSummaryLoading()"
+          (click)="generateSummary()"
+        >
+          {{ treatmentSummaryLoading() ? 'Generating...' : 'Generate summary' }}
+        </button>
+      } @else if (treatmentSummary() === null) {
+        <p class="empty-state">AI summaries aren't available right now.</p>
+      } @else {
+        <p class="summary-text">{{ treatmentSummary() }}</p>
+      }
+    </div>
+
+    @if (editing()) {
+      <app-modal title="Edit patient" (closed)="editing.set(false)">
+        <app-patient-form mode="edit" [initialValue]="p" (saved)="onPatientUpdated($event)" />
+      </app-modal>
+    }
+  }
+</div>

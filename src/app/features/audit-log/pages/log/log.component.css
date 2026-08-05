@@ -1,0 +1,251 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text, #1e2b33);
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 13.5px;
+  color: var(--color-faint, #8a96a1);
+  margin: 4px 0 0;
+  max-width: 560px;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-tab {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--color-border, #e3e8ec);
+  background: #fff;
+  color: var(--color-text, #1e2b33);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter-tab.active {
+  background: var(--color-navy, #0f2a47);
+  border-color: var(--color-navy, #0f2a47);
+  color: #fff;
+}
+
+.filter-fields {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.native-input {
+  padding: 9px 11px;
+  border: 1.5px solid var(--color-border, #e1e7ea);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.native-input:focus {
+  outline: none;
+  border-color: var(--color-teal, #0e7c86);
+}
+
+.filter-sep {
+  font-size: 12.5px;
+  color: var(--color-faint, #8a96a1);
+}
+
+.btn {
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+}
+
+.btn-secondary {
+  background: var(--color-navy, #0f2a47);
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: var(--color-teal, #0e7c86);
+}
+
+.btn-ghost {
+  background: #fff;
+  border-color: var(--color-border, #e3e8ec);
+  color: var(--color-text, #1e2b33);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-background-muted, #f4f6f8);
+}
+
+.btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hint,
+.error {
+  font-size: 13px;
+  color: var(--color-faint, #8a96a1);
+  padding: 24px 0;
+  text-align: center;
+}
+
+.error {
+  color: var(--color-red, #c4433d);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--color-border, #e3e8ec);
+  border-radius: 12px;
+}
+
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.log-table th {
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--color-faint, #8a96a1);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border, #e3e8ec);
+}
+
+.log-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border, #e3e8ec);
+  color: var(--color-text, #1e2b33);
+  vertical-align: top;
+}
+
+.row-link {
+  cursor: pointer;
+}
+
+.row-link:hover {
+  background: var(--color-background-muted, #f4f6f8);
+}
+
+.when-cell {
+  white-space: nowrap;
+  color: var(--color-faint, #8a96a1);
+  font-size: 12.5px;
+}
+
+.role-tag {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-faint, #8a96a1);
+}
+
+.method-cell {
+  font-weight: 700;
+  font-size: 11.5px;
+  color: var(--color-teal, #0e7c86);
+}
+
+.action-cell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.path-cell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--color-faint, #8a96a1);
+}
+
+.expand-cell {
+  text-align: right;
+  color: var(--color-faint, #8a96a1);
+  font-size: 11px;
+}
+
+.detail-row td {
+  background: var(--color-background-muted, #f4f6f8);
+  padding: 14px 16px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 20px;
+}
+
+.detail-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-faint, #8a96a1);
+  margin-bottom: 6px;
+}
+
+.detail-pre {
+  margin: 0;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--color-text, #1e2b33);
+}
+
+.detail-meta {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  color: var(--color-text, #1e2b33);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.page-info {
+  font-size: 12.5px;
+  color: var(--color-faint, #8a96a1);
+}

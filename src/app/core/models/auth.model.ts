@@ -1,4 +1,4 @@
-export type UserRole = 'owner' | 'doctor' | 'receptionist' | 'Owner' | 'Doctor' | 'Reception';
+export type UserRole = 'owner' | 'doctor' | 'receptionist';
 
 export interface User {
   id?: string;
@@ -6,20 +6,17 @@ export interface User {
   name: string;
   role: UserRole;
   avatar?: string;
+  phone?: string | null;
+  isActive?: boolean;
 }
 
 export interface LoginCredentials {
   email: string;
-  password?: string;
+  password: string;
   role?: UserRole;
 }
 
 export interface AuthResponse {
-  token: string;
+  accessToken: string;
   user: User;
-}
-
-export interface LoginResponse {
-  user: User;
-  token: string;
 }

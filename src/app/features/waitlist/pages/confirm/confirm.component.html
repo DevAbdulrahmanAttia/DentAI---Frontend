@@ -1,0 +1,49 @@
+<div class="confirm-page">
+  <div class="confirm-card">
+    <div class="brand">DentAI</div>
+
+    @switch (state()) {
+      @case ('loading') {
+        <p class="status-text">Loading your appointment offer...</p>
+      }
+
+      @case ('preview') {
+        @if (preview(); as offer) {
+          <h1>Confirm your appointment</h1>
+          <p class="lead">A slot opened up — here are the details:</p>
+
+          <dl class="details">
+            <dt>Patient</dt>
+            <dd>{{ offer.patientName }}</dd>
+            <dt>Doctor</dt>
+            <dd>{{ offer.doctorName }}</dd>
+            <dt>Procedure</dt>
+            <dd>{{ offer.procedureName }}</dd>
+            <dt>When</dt>
+            <dd>{{ formatScheduledAt(offer.scheduledAt) }}</dd>
+          </dl>
+
+          <button type="button" class="confirm-btn" (click)="confirm()">Confirm this appointment</button>
+        }
+      }
+
+      @case ('confirming') {
+        <p class="status-text">Booking your appointment...</p>
+      }
+
+      @case ('confirmed') {
+        <div class="result result-success">
+          <h1>You're all set!</h1>
+          <p>Your appointment has been booked. We look forward to seeing you.</p>
+        </div>
+      }
+
+      @case ('invalid') {
+        <div class="result result-error">
+          <h1>Offer unavailable</h1>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      }
+    }
+  </div>
+</div>

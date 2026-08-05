@@ -1,0 +1,156 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Delayed Schedule</h1>
+    <p class="subtitle">Advisory only — you decide what to do about every delay.</p>
+  </div>
+
+  <div class="kpi-grid">
+    @if (kpis(); as k) {
+      <div class="kpi-card" [class.kpi-card-warn]="k.delayedCount > 0">
+        <span class="kpi-label">Delayed appointments today</span>
+        <span class="kpi-value">{{ k.delayedCount }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Average delay today</span>
+        <span class="kpi-value">{{ k.averageDelayMin }} min</span>
+      </div>
+      <div class="kpi-card" [class.kpi-card-warn]="k.longestDelayMin > 30">
+        <span class="kpi-label">Longest current delay</span>
+        <span class="kpi-value">{{ k.longestDelayMin }} min</span>
+      </div>
+    }
+  </div>
+
+  <section class="panel">
+    <h2 class="section-title">Affected appointments</h2>
+
+    @if (loading()) {
+      <p class="empty-state">Checking today's schedule...</p>
+    } @else if (loadError()) {
+      <p class="empty-state empty-state-error">Couldn't load the delayed schedule.</p>
+    } @else if (entries().length === 0) {
+      <p class="empty-state">Nobody is running behind right now.</p>
+    } @else {
+      @if (actionError()) {
+        <p class="form-error">{{ actionError() }}</p>
+      }
+      <div class="table-wrap">
+        <table class="delay-table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Original time</th>
+              <th>Est. delay</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of entries(); track entry.appointmentId) {
+              <tr>
+                <td>{{ entry.patientName }}</td>
+                <td>{{ entry.doctorName }}</td>
+                <td>{{ formatTime(entry.originalScheduledAt) }}</td>
+                <td class="delay-cell">+{{ entry.estimatedDelayMin }} min</td>
+                <td><span class="status-chip status-{{ entry.visitStatus }}">{{ entry.visitStatus.replace('_', ' ') }}</span></td>
+                <td class="actions-cell">
+                  <button
+                    type="button"
+                    class="mini-btn"
+                    [disabled]="actionBusyId() === entry.appointmentId"
+                    (click)="act(entry, 'marked_waiting')"
+                  >
+                    Mark waiting
+                  </button>
+                  <button
+                    type="button"
+                    class="mini-btn"
+                    [disabled]="actionBusyId() === entry.appointmentId"
+                    (click)="act(entry, 'notified')"
+                  >
+                    Notify (WhatsApp)
+                  </button>
+                  <button
+                    type="button"
+                    class="mini-btn"
+                    [disabled]="actionBusyId() === entry.appointmentId"
+                    (click)="act(entry, 'called')"
+                  >
+                    Call
+                  </button>
+                  <a class="mini-btn mini-btn-link" [routerLink]="['/dashboard/appointments', entry.appointmentId]">
+                    Reschedule
+                  </a>
+                  <button
+                    type="button"
+                    class="mini-btn mini-btn-ignore"
+                    [disabled]="actionBusyId() === entry.appointmentId"
+                    (click)="act(entry, 'ignored')"
+                  >
+                    Ignore
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2 class="section-title">Doctor's day timeline</h2>
+      <div class="doctor-tabs">
+        @for (doc of doctors(); track doc.id) {
+          <button
+            type="button"
+            class="doctor-tab"
+            [class.doctor-tab-active]="selectedDoctorId() === doc.id"
+            (click)="selectDoctor(doc.id)"
+          >
+            {{ doc.name }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-hours">
+        @for (hour of timelineHours; track hour) {
+          <span class="timeline-hour">{{ hour }}:00</span>
+        }
+      </div>
+      <div class="timeline-track">
+        @for (block of timelineBlocks(); track block.appointment.id) {
+          <div
+            class="timeline-block"
+            [class.timeline-block-current]="block.isCurrent"
+            [class.timeline-block-delayed]="block.delayMin > 0"
+            [class.timeline-block-late-done]="block.lateFinishMin > 0"
+            [style.left.%]="block.leftPct"
+            [style.width.%]="block.widthPct"
+            [title]="block.lateFinishMin > 0 ? block.appointment.patient.name + ' — finished ' + block.lateFinishMin + ' min past its scheduled end' : block.appointment.patient.name"
+          >
+            <span class="timeline-block-label">
+              {{ block.appointment.patient.name }}
+              @if (block.delayMin > 0) {
+                <span class="timeline-delay-tag">+{{ block.delayMin }}m</span>
+              }
+              @if (block.lateFinishMin > 0) {
+                <span class="timeline-late-tag">ran {{ block.lateFinishMin }}m over</span>
+              }
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+    <p class="timeline-legend">
+      <span class="legend-swatch legend-current"></span> Current
+      <span class="legend-swatch legend-delayed"></span> Delayed
+      <span class="legend-swatch legend-normal"></span> On schedule
+      <span class="legend-swatch legend-late-done"></span> Finished, but ran late
+    </p>
+  </section>
+</div>

@@ -1,0 +1,117 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1>Audit Log</h1>
+      <p class="subtitle">Every create, update, and delete made through the API — who did it, when, and what changed.</p>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="filter-tabs">
+      <button
+        type="button"
+        class="filter-tab"
+        [class.active]="methodFilter() === 'all'"
+        (click)="onMethodFilterChange('all')"
+      >
+        All actions
+      </button>
+      @for (method of methods; track method) {
+        <button
+          type="button"
+          class="filter-tab"
+          [class.active]="methodFilter() === method"
+          (click)="onMethodFilterChange(method)"
+        >
+          {{ method }}
+        </button>
+      }
+    </div>
+
+    <div class="filter-fields">
+      <input
+        class="native-input"
+        type="text"
+        placeholder="Search by action, e.g. invoices.issue"
+        [formControl]="actionControl"
+        (keyup.enter)="applyFilters()"
+      />
+      <input class="native-input" type="date" [formControl]="fromControl" />
+      <span class="filter-sep">to</span>
+      <input class="native-input" type="date" [formControl]="toControl" />
+      <button type="button" class="btn btn-secondary" (click)="applyFilters()">Apply</button>
+      <button type="button" class="btn btn-ghost" (click)="clearFilters()">Clear</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="hint">Loading audit log...</p>
+  } @else if (loadError()) {
+    <p class="error">Couldn't load the audit log.</p>
+  } @else if (logs().length === 0) {
+    <p class="hint">No activity matches this filter.</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Actor</th>
+            <th>Method</th>
+            <th>Action</th>
+            <th>Path</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.id) {
+            <tr class="row-link" (click)="toggleExpanded(log)">
+              <td class="when-cell">{{ log.createdAt | date: 'medium' }}</td>
+              <td>
+                {{ actorLabel(log) }}
+                @if (log.actorRole) {
+                  <span class="role-tag">{{ log.actorRole }}</span>
+                }
+              </td>
+              <td class="method-cell">{{ log.method }}</td>
+              <td class="action-cell">{{ log.action }}</td>
+              <td class="path-cell">{{ log.path }}</td>
+              <td>
+                <app-status-pill [tone]="statusTone(log.statusCode)" [label]="log.statusCode + ''" />
+              </td>
+              <td class="expand-cell">{{ expandedId() === log.id ? '▲' : '▼' }}</td>
+            </tr>
+            @if (expandedId() === log.id) {
+              <tr class="detail-row">
+                <td colspan="7">
+                  <div class="detail-grid">
+                    <div>
+                      <span class="detail-label">Params</span>
+                      <pre class="detail-pre">{{ formatDetail(log.params) }}</pre>
+                    </div>
+                    <div>
+                      <span class="detail-label">Body</span>
+                      <pre class="detail-pre">{{ formatDetail(log.body) }}</pre>
+                    </div>
+                    <div>
+                      <span class="detail-label">Request</span>
+                      <p class="detail-meta">IP: {{ log.ipAddress ?? '—' }}</p>
+                      <p class="detail-meta">Duration: {{ log.durationMs }} ms</p>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button type="button" class="btn btn-ghost" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">Previous</button>
+      <span class="page-info">Page {{ page() }} of {{ pageCount }} · {{ total() }} total</span>
+      <button type="button" class="btn btn-ghost" [disabled]="page() >= pageCount" (click)="goToPage(page() + 1)">Next</button>
+    </div>
+  }
+</div>

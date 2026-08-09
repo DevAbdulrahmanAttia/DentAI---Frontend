@@ -16,7 +16,12 @@ export class UsersService {
     return this.http.get<User[]>(url, { params: role ? { role } : {} });
   }
 
+  /**
+   * Everyone who treats patients, which is what a doctor picker wants —
+   * filtering by `role=doctor` would drop an owner who also practises.
+   */
   listDoctors(): Observable<User[]> {
-    return this.list('doctor');
+    const url = `${this.apiUrl}${API_ENDPOINTS.USERS}`;
+    return this.http.get<User[]>(url, { params: { clinician: true } });
   }
 }

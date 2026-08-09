@@ -46,6 +46,15 @@ export class DelaysComponent implements OnInit {
   protected readonly actionBusyId = signal<string | null>(null);
   protected readonly actionError = signal('');
 
+  /**
+   * Visits the cascade has pushed past the doctor's finish time. Surfaced as
+   * its own panel because these need a decision from a person today, unlike
+   * an ordinary delay which usually just resolves itself.
+   */
+  protected readonly atRiskEntries = computed(() =>
+    this.entries().filter((e) => e.atRiskAfterHours),
+  );
+
   protected readonly delayByAppointmentId = computed(() => {
     const map = new Map<string, number>();
     for (const e of this.entries()) map.set(e.appointmentId, e.estimatedDelayMin);
@@ -81,7 +90,7 @@ export class DelaysComponent implements OnInit {
       next: (users) => {
         const doctors = users
           .filter((u): u is typeof u & { id: string } => !!u.id)
-          .filter((u) => u.role === 'doctor' && u.isActive !== false)
+          .filter((u) => (u.isClinician ?? u.role === 'doctor') && u.isActive !== false)
           .map((u) => ({ id: u.id, name: u.name }));
         this.doctors.set(doctors);
         if (doctors.length > 0 && !this.selectedDoctorId()) {

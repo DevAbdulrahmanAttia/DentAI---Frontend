@@ -7,7 +7,21 @@ import {
   UpdateProfilePayload
 } from '@features/settings/services/settings.service';
 
-type SettingsTab = 'clinic' | 'notifications' | 'account';
+type SettingsTab = 'clinic' | 'scheduling' | 'notifications' | 'account';
+
+interface GranularityOption {
+  value: number;
+  label: string;
+}
+
+const GRANULARITY_OPTIONS: GranularityOption[] = [
+  { value: 5, label: 'Every 5 minutes' },
+  { value: 10, label: 'Every 10 minutes' },
+  { value: 15, label: 'Every 15 minutes' },
+  { value: 20, label: 'Every 20 minutes' },
+  { value: 30, label: 'Every 30 minutes' },
+  { value: 60, label: 'Every hour' }
+];
 
 interface WeekdayOption {
   value: string;
@@ -37,6 +51,7 @@ export class SettingsComponent implements OnInit {
   protected readonly authService = inject(AuthService);
 
   protected readonly weekdays = WEEKDAYS;
+  protected readonly granularityOptions = GRANULARITY_OPTIONS;
   protected readonly activeTab = signal<SettingsTab>('account');
 
   protected readonly clinicLoading = signal(true);
@@ -44,6 +59,10 @@ export class SettingsComponent implements OnInit {
   protected readonly clinicSaving = signal(false);
   protected readonly clinicSaveError = signal('');
   protected readonly clinicSaved = signal(false);
+
+  protected readonly schedulingSaving = signal(false);
+  protected readonly schedulingSaveError = signal('');
+  protected readonly schedulingSaved = signal(false);
 
   protected readonly notificationsSaving = signal(false);
   protected readonly notificationsSaveError = signal('');
@@ -65,6 +84,13 @@ export class SettingsComponent implements OnInit {
     workingHoursEnd: ['18:00', Validators.required]
   });
   protected readonly selectedWorkingDays = signal<string[]>([]);
+
+  protected readonly schedulingForm = this.fb.nonNullable.group({
+    slotGranularityMin: [15, Validators.required],
+    closingBufferMin: [15, [Validators.required, Validators.min(0), Validators.max(120)]],
+    appointmentBufferMin: [5, [Validators.required, Validators.min(0), Validators.max(60)]],
+    useLearnedDurations: [true]
+  });
 
   protected readonly notificationsForm = this.fb.nonNullable.group({
     standardReminderLeadHours: ['24', Validators.required],
@@ -127,6 +153,12 @@ export class SettingsComponent implements OnInit {
           workingHoursEnd: settings.workingHoursEnd
         });
         this.selectedWorkingDays.set(settings.workingDays);
+        this.schedulingForm.setValue({
+          slotGranularityMin: settings.slotGranularityMin,
+          closingBufferMin: settings.closingBufferMin,
+          appointmentBufferMin: settings.appointmentBufferMin,
+          useLearnedDurations: settings.useLearnedDurations
+        });
         this.notificationsForm.setValue({
           standardReminderLeadHours: settings.standardReminderLeadHours.join(', '),
           highRiskReminderLeadHours: settings.highRiskReminderLeadHours.join(', ')
@@ -169,6 +201,37 @@ export class SettingsComponent implements OnInit {
         error: (err) => {
           this.clinicSaving.set(false);
           this.clinicSaveError.set(err?.error?.message || 'Could not save clinic profile.');
+        }
+      });
+  }
+
+  saveScheduling(): void {
+    if (this.schedulingForm.invalid || this.schedulingSaving()) {
+      this.schedulingForm.markAllAsTouched();
+      return;
+    }
+
+    this.schedulingSaving.set(true);
+    this.schedulingSaveError.set('');
+    this.schedulingSaved.set(false);
+    const { slotGranularityMin, closingBufferMin, appointmentBufferMin, useLearnedDurations } =
+      this.schedulingForm.getRawValue();
+
+    this.settingsService
+      .updateClinicSettings({
+        slotGranularityMin: Number(slotGranularityMin),
+        closingBufferMin,
+        appointmentBufferMin,
+        useLearnedDurations
+      })
+      .subscribe({
+        next: () => {
+          this.schedulingSaving.set(false);
+          this.schedulingSaved.set(true);
+        },
+        error: (err) => {
+          this.schedulingSaving.set(false);
+          this.schedulingSaveError.set(err?.error?.message || 'Could not save scheduling settings.');
         }
       });
   }

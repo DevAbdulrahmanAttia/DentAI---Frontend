@@ -37,7 +37,7 @@ export class ProcedureVisitComponent implements OnInit {
   ngOnInit(): void {
     this.loadUsage();
 
-    if (this.authService.hasRole('doctor')) {
+    if (this.authService.isClinician()) {
       this.reloadItems();
     }
   }

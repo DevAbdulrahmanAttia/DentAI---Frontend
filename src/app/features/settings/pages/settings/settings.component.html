@@ -11,6 +11,9 @@
       <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'clinic'" (click)="setTab('clinic')">
         Clinic Profile &amp; Hours
       </button>
+      <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'scheduling'" (click)="setTab('scheduling')">
+        Booking &amp; Scheduling
+      </button>
       <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'notifications'" (click)="setTab('notifications')">
         Notifications
       </button>
@@ -80,6 +83,67 @@
           <div class="form-actions">
             <button type="submit" class="submit-btn" [disabled]="clinicSaving()">
               {{ clinicSaving() ? 'Saving...' : 'Save changes' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+
+  @if (activeTab() === 'scheduling' && authService.hasRole('owner')) {
+    <div class="panel">
+      <h2 class="section-title">Booking &amp; scheduling</h2>
+      <p class="subtitle">Controls how the online booking grid and appointment durations behave.</p>
+
+      @if (clinicLoading()) {
+        <p class="empty-state">Loading...</p>
+      } @else if (clinicLoadError()) {
+        <p class="empty-state empty-state-error">Couldn't load scheduling settings.</p>
+      } @else {
+        <form class="settings-form" [formGroup]="schedulingForm" (ngSubmit)="saveScheduling()">
+          <div class="field">
+            <label for="slotGranularityMin">Booking slot interval</label>
+            <select id="slotGranularityMin" formControlName="slotGranularityMin" class="native-input">
+              @for (option of granularityOptions; track option.value) {
+                <option [ngValue]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            <p class="field-hint">How often a new appointment can start. Finer intervals waste less capacity on buffers.</p>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="closingBufferMin">Closing buffer (minutes)</label>
+              <input id="closingBufferMin" type="number" min="0" max="120" formControlName="closingBufferMin" class="native-input" />
+              <p class="field-hint">Time held free at the end of the day to absorb a late-running schedule.</p>
+            </div>
+            <div class="field">
+              <label for="appointmentBufferMin">Changeover buffer (minutes)</label>
+              <input id="appointmentBufferMin" type="number" min="0" max="60" formControlName="appointmentBufferMin" class="native-input" />
+              <p class="field-hint">Time assumed after each appointment before the next one can start.</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="toggle-row">
+              <input type="checkbox" formControlName="useLearnedDurations" class="toggle-checkbox" />
+              <span>
+                <span class="field-label-static">Use learned appointment durations</span>
+                <span class="field-hint">Size bookings from what procedures actually take at this clinic instead of the declared estimate. When off, actual durations are still tracked and shown to staff, just not applied.</span>
+              </span>
+            </label>
+          </div>
+
+          @if (schedulingSaveError()) {
+            <p class="form-error">{{ schedulingSaveError() }}</p>
+          }
+          @if (schedulingSaved()) {
+            <p class="form-success">Scheduling settings saved.</p>
+          }
+
+          <div class="form-actions">
+            <button type="submit" class="submit-btn" [disabled]="schedulingSaving()">
+              {{ schedulingSaving() ? 'Saving...' : 'Save changes' }}
             </button>
           </div>
         </form>

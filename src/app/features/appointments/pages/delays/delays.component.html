@@ -18,8 +18,78 @@
         <span class="kpi-label">Longest current delay</span>
         <span class="kpi-value">{{ k.longestDelayMin }} min</span>
       </div>
+      <div class="kpi-card" [class.kpi-card-danger]="k.atRiskAfterHoursCount > 0">
+        <span class="kpi-label">Won't fit before closing</span>
+        <span class="kpi-value">{{ k.atRiskAfterHoursCount }}</span>
+      </div>
     }
   </div>
+
+  @if (atRiskEntries().length > 0) {
+    <section class="panel panel-danger">
+      <h2 class="section-title">
+        Won't fit before closing
+        <span class="risk-count">{{ atRiskEntries().length }}</span>
+      </h2>
+      <p class="panel-note">
+        Today's delays have pushed these visits past the doctor's finish time. Nothing has been
+        cancelled or moved — decide what to offer each patient, then record it below.
+      </p>
+
+      <div class="risk-list">
+        @for (entry of atRiskEntries(); track entry.appointmentId) {
+          <div class="risk-row">
+            <div class="risk-main">
+              <span class="risk-name">{{ entry.patientName }}</span>
+              <span class="risk-meta">
+                {{ entry.doctorName }} · {{ entry.procedureName }}
+              </span>
+              <span class="risk-times">
+                Booked {{ formatTime(entry.originalScheduledAt) }} ·
+                now expected {{ formatTime(entry.estimatedStartAt) }}
+                @if (entry.closesAt) {
+                  <strong> · closes {{ entry.closesAt }}</strong>
+                }
+              </span>
+            </div>
+            <div class="risk-actions">
+              <a
+                class="mini-btn mini-btn-primary"
+                [routerLink]="['/dashboard/appointments', entry.appointmentId]"
+              >
+                Offer a new time
+              </a>
+              <button
+                type="button"
+                class="mini-btn"
+                [disabled]="actionBusyId() === entry.appointmentId"
+                (click)="act(entry, 'called')"
+              >
+                Call patient
+              </button>
+              <button
+                type="button"
+                class="mini-btn"
+                [disabled]="actionBusyId() === entry.appointmentId"
+                (click)="act(entry, 'notified')"
+              >
+                Notify (WhatsApp)
+              </button>
+              <button
+                type="button"
+                class="mini-btn mini-btn-ignore"
+                [disabled]="actionBusyId() === entry.appointmentId"
+                (click)="act(entry, 'ignored')"
+                title="Doctor is staying late — no action needed"
+              >
+                Doctor will stay
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
 
   <section class="panel">
     <h2 class="section-title">Affected appointments</h2>
@@ -48,8 +118,15 @@
           </thead>
           <tbody>
             @for (entry of entries(); track entry.appointmentId) {
-              <tr>
-                <td>{{ entry.patientName }}</td>
+              <tr [class.row-at-risk]="entry.atRiskAfterHours">
+                <td>
+                  {{ entry.patientName }}
+                  @if (entry.atRiskAfterHours) {
+                    <span class="risk-tag" title="Projected to run past the doctor's closing time">
+                      past closing
+                    </span>
+                  }
+                </td>
                 <td>{{ entry.doctorName }}</td>
                 <td>{{ formatTime(entry.originalScheduledAt) }}</td>
                 <td class="delay-cell">+{{ entry.estimatedDelayMin }} min</td>

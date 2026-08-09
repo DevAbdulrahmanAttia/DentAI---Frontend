@@ -12,6 +12,8 @@ export interface CreateStaffPayload {
   password: string;
   role: UserRole;
   phone?: string;
+  /** Only meaningful for owners — doctors are always clinicians, receptionists never. */
+  isClinician?: boolean;
 }
 
 export interface UpdateStaffPayload {
@@ -19,6 +21,7 @@ export interface UpdateStaffPayload {
   phone?: string;
   role?: UserRole;
   isActive?: boolean;
+  isClinician?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })

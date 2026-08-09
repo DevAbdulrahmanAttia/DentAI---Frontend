@@ -38,6 +38,20 @@
           <input id="phone" type="text" formControlName="phone" class="native-input" placeholder="e.g. +201000000000" />
         </div>
 
+        @if (selectedRole() === 'owner') {
+          <div class="field">
+            <label class="checkbox-row">
+              <input type="checkbox" formControlName="isClinician" class="checkbox-input" />
+              <span>
+                <span class="checkbox-label">Also treats patients</span>
+                <span class="checkbox-hint">
+                  Gives this owner a doctor's schedule and makes them bookable, without a second account.
+                </span>
+              </span>
+            </label>
+          </div>
+        }
+
         @if (addError()) {
           <p class="form-error">{{ addError() }}</p>
         }
@@ -64,6 +78,7 @@
               <th>Name</th>
               <th>Email</th>
               <th>Role</th>
+              <th>Treats patients</th>
               <th>Phone</th>
               <th>Status</th>
               <th></th>
@@ -75,6 +90,20 @@
                 <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
                 <td class="role-cell">{{ user.role }}</td>
+                <td>
+                  @if (canToggleClinician(user)) {
+                    <button
+                      type="button"
+                      class="toggle-btn"
+                      [disabled]="updatingId() === user.id"
+                      (click)="toggleClinician(user)"
+                    >
+                      {{ treatsPatients(user) ? 'Yes — turn off' : 'No — turn on' }}
+                    </button>
+                  } @else {
+                    <span class="muted-cell">{{ treatsPatients(user) ? 'Yes' : 'No' }}</span>
+                  }
+                </td>
                 <td>{{ user.phone || '—' }}</td>
                 <td>
                   <app-status-pill

@@ -35,6 +35,16 @@ export class AuthService {
   readonly token = signal<string | null>(this.getInitialToken());
   readonly isAuthenticated = computed<boolean>(() => !!this.token());
   readonly userRole = computed<UserRole | null>(() => this.currentUser()?.role ?? null);
+  /**
+   * Whether the signed-in user treats patients — an owner-dentist included.
+   * Sessions stored before this field existed fall back to the old rule so a
+   * cached login doesn't lose clinical UI until the token expires.
+   */
+  readonly isClinician = computed<boolean>(() => {
+    const user = this.currentUser();
+    if (!user) return false;
+    return user.isClinician ?? user.role === 'doctor';
+  });
 
   /**
    * Executes authentication request against the backend endpoint,

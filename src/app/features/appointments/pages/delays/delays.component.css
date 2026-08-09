@@ -38,6 +38,13 @@
   background: var(--color-amber-bg);
 }
 
+/* Red rather than amber: an ordinary delay usually resolves itself, but a
+   visit that no longer fits the working day needs a decision today. */
+.kpi-card-danger {
+  border-color: var(--color-red);
+  background: var(--color-red-bg);
+}
+
 .kpi-label {
   font-size: 12px;
   color: var(--color-faint);
@@ -55,6 +62,94 @@
   border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 18px 20px;
+}
+
+.panel-danger {
+  border-color: var(--color-red);
+  border-left-width: 4px;
+}
+
+.panel-note {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--color-faint);
+  max-width: 70ch;
+}
+
+.risk-count {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: var(--color-red);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.risk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.risk-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-red-bg);
+}
+
+.risk-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 260px;
+}
+
+.risk-name {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.risk-meta,
+.risk-times {
+  font-size: 12px;
+  color: var(--color-faint);
+}
+
+.risk-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mini-btn-primary {
+  background: var(--color-navy);
+  border-color: var(--color-navy);
+  color: #fff;
+}
+
+.row-at-risk {
+  background: var(--color-red-bg);
+}
+
+.risk-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--color-red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .panel-head {

@@ -8,6 +8,10 @@ export interface ClinicSettings {
   workingHoursEnd: string;
   standardReminderLeadHours: number[];
   highRiskReminderLeadHours: number[];
+  slotGranularityMin: number;
+  closingBufferMin: number;
+  appointmentBufferMin: number;
+  useLearnedDurations: boolean;
 }
 
 export type UpdateClinicSettings = Partial<Omit<ClinicSettings, 'id'>>;

@@ -27,15 +27,50 @@ export class RosterComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     role: ['receptionist' as UserRole, Validators.required],
-    phone: ['']
+    phone: [''],
+    isClinician: [false]
   });
   protected readonly adding = signal(false);
   protected readonly addError = signal('');
+
+  /**
+   * Mirrors the role control so the template can reveal the "also treats
+   * patients" option — that choice only exists for owners, since doctors
+   * always practise and receptionists never do.
+   */
+  protected readonly selectedRole = signal<UserRole>('receptionist');
 
   protected readonly updatingId = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadStaff();
+    this.addForm.controls.role.valueChanges.subscribe((role) =>
+      this.selectedRole.set(role)
+    );
+  }
+
+  /** Doctors are clinicians by definition; only an owner's is a real choice. */
+  treatsPatients(user: User): boolean {
+    return user.isClinician ?? user.role === 'doctor';
+  }
+
+  canToggleClinician(user: User): boolean {
+    return user.role === 'owner';
+  }
+
+  toggleClinician(user: User): void {
+    if (!user.id || this.updatingId()) return;
+
+    this.updatingId.set(user.id);
+    this.staffService.update(user.id, { isClinician: !this.treatsPatients(user) }).subscribe({
+      next: () => {
+        this.updatingId.set(null);
+        this.loadStaff();
+      },
+      error: () => {
+        this.updatingId.set(null);
+      }
+    });
   }
 
   loadStaff(): void {
@@ -55,7 +90,8 @@ export class RosterComponent implements OnInit {
 
   toggleAddForm(): void {
     this.showAddForm.set(!this.showAddForm());
-    this.addForm.reset({ role: 'receptionist' });
+    this.addForm.reset({ role: 'receptionist', isClinician: false });
+    this.selectedRole.set('receptionist');
     this.addError.set('');
   }
 
@@ -67,20 +103,32 @@ export class RosterComponent implements OnInit {
 
     this.adding.set(true);
     this.addError.set('');
-    const { name, email, password, role, phone } = this.addForm.getRawValue();
+    const { name, email, password, role, phone, isClinician } = this.addForm.getRawValue();
 
-    this.staffService.create({ name, email, password, role, phone: phone || undefined }).subscribe({
-      next: () => {
-        this.adding.set(false);
-        this.showAddForm.set(false);
-        this.addForm.reset({ role: 'receptionist' });
-        this.loadStaff();
-      },
-      error: (err) => {
-        this.adding.set(false);
-        this.addError.set(err?.error?.message || 'Could not create this staff account.');
-      }
-    });
+    this.staffService
+      .create({
+        name,
+        email,
+        password,
+        role,
+        phone: phone || undefined,
+        // Only sent for owners — the backend forces the right value for the
+        // other two roles regardless of what we ask for.
+        isClinician: role === 'owner' ? isClinician : undefined
+      })
+      .subscribe({
+        next: () => {
+          this.adding.set(false);
+          this.showAddForm.set(false);
+          this.addForm.reset({ role: 'receptionist', isClinician: false });
+          this.selectedRole.set('receptionist');
+          this.loadStaff();
+        },
+        error: (err) => {
+          this.adding.set(false);
+          this.addError.set(err?.error?.message || 'Could not create this staff account.');
+        }
+      });
   }
 
   isSelf(user: User): boolean {

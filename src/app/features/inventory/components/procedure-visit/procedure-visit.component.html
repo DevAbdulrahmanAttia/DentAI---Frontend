@@ -18,7 +18,7 @@
     </ul>
   }
 
-  @if (authService.hasRole('doctor')) {
+  @if (authService.isClinician()) {
     @if (itemsLoading()) {
       <p class="empty-state">Loading inventory...</p>
     } @else if (items().length === 0) {

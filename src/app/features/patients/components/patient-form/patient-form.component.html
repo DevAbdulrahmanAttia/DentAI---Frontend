@@ -1,22 +1,22 @@
 <form class="patient-form" [formGroup]="form" (ngSubmit)="submit()">
   <div class="field">
-    <label for="name">Full name</label>
-    <input id="name" type="text" formControlName="name" class="native-input" placeholder="Patient name" />
+    <label for="name">{{ 'patients.fullName' | t }}</label>
+    <input id="name" type="text" formControlName="name" class="native-input" [placeholder]="'patients.namePlaceholder' | t" />
   </div>
   <div class="field">
-    <label for="phone">Phone</label>
-    <input id="phone" type="text" formControlName="phone" class="native-input" placeholder="e.g. +201000000000" />
+    <label for="phone">{{ 'common.phone' | t }}</label>
+    <input id="phone" type="text" dir="ltr" formControlName="phone" class="native-input" placeholder="e.g. +201000000000" />
   </div>
   <div class="field">
-    <label for="email">Email</label>
-    <input id="email" type="email" formControlName="email" class="native-input" placeholder="patient@email.com" />
+    <label for="email">{{ 'common.email' | t }}</label>
+    <input id="email" type="email" dir="ltr" formControlName="email" class="native-input" [placeholder]="'patients.emailPlaceholder' | t" />
   </div>
   <div class="field">
-    <label for="dateOfBirth">Date of birth</label>
+    <label for="dateOfBirth">{{ 'patients.dateOfBirth' | t }}</label>
     <input id="dateOfBirth" type="date" formControlName="dateOfBirth" class="native-input" />
   </div>
   <div class="field">
-    <label for="medicalNotes">Medical notes</label>
+    <label for="medicalNotes">{{ 'patients.medicalNotes' | t }}</label>
     <textarea id="medicalNotes" formControlName="medicalNotes" class="notes-input" rows="3"></textarea>
   </div>
 
@@ -25,6 +25,6 @@
   }
 
   <div class="form-actions">
-    <button type="submit" class="submit-btn" [disabled]="isSaving">{{ submitLabel }}</button>
+    <button type="submit" class="submit-btn" [disabled]="isSaving">{{ submitLabel | t }}</button>
   </div>
 </form>

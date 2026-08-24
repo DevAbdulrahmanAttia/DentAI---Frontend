@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -13,11 +12,13 @@ import {
 import { BillingService } from '@features/billing/services/billing.service';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
 import { invoiceStatusInfo } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-invoice-detail',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, StatusPillComponent, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, StatusPillComponent, TranslatePipe],
   templateUrl: './invoice-detail.component.html',
   styleUrl: './invoice-detail.component.css'
 })
@@ -26,6 +27,7 @@ export class InvoiceDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly billingService = inject(BillingService);
   protected readonly authService = inject(AuthService);
+  private readonly i18n = inject(I18nService);
 
   protected readonly invoiceId = this.route.snapshot.paramMap.get('id') ?? '';
 
@@ -91,7 +93,18 @@ export class InvoiceDetailComponent implements OnInit {
   }
 
   formatMoney(value: number): string {
-    return `EGP ${value.toFixed(2)}`;
+    return `${this.i18n.t('common.egp')} ${value.toFixed(2)}`;
+  }
+
+  /** Replaces Angular's `date` pipe (locked to the static `LOCALE_ID`) so payment dates follow the active app language. */
+  formatPaymentDate(iso: string): string {
+    return new Date(iso).toLocaleString(this.i18n.intlLocale(), {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 
   toggleAddItem(): void {
@@ -121,7 +134,7 @@ export class InvoiceDetailComponent implements OnInit {
 
   removeItem(itemId: string): void {
     if (this.busy()) return;
-    if (!confirm('Remove this line item from the invoice?')) return;
+    if (!confirm(this.i18n.t('billing.confirmRemoveItem'))) return;
     this.runAction(this.billingService.removeItem(this.invoiceId, itemId));
   }
 
@@ -147,13 +160,13 @@ export class InvoiceDetailComponent implements OnInit {
 
   issueInvoice(): void {
     if (this.busy()) return;
-    if (!confirm('Issue this invoice? Items and discount can no longer be edited afterwards.')) return;
+    if (!confirm(this.i18n.t('billing.confirmIssue'))) return;
     this.runAction(this.billingService.issue(this.invoiceId));
   }
 
   cancelInvoice(): void {
     if (this.busy()) return;
-    if (!confirm('Cancel this invoice? This cannot be undone.')) return;
+    if (!confirm(this.i18n.t('billing.confirmCancel'))) return;
     this.runAction(this.billingService.cancel(this.invoiceId));
   }
 
@@ -232,7 +245,7 @@ export class InvoiceDetailComponent implements OnInit {
         this.busy.set(false);
         const message = err?.error?.message;
         this.actionError.set(
-          Array.isArray(message) ? message.join(', ') : message ?? 'That action failed.'
+          Array.isArray(message) ? message.join(', ') : message ?? this.i18n.t('billing.actionFailed')
         );
       }
     });

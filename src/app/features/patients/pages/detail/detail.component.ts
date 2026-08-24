@@ -9,6 +9,8 @@ import { PatientFormComponent } from '@features/patients/components/patient-form
 import { ModalComponent } from '@shared/ui/modal/modal.component';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
 import { appointmentStatusInfo } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-patient-detail',
@@ -19,13 +21,15 @@ import { appointmentStatusInfo } from '@shared/utils/status-maps';
     ModalComponent,
     StatusPillComponent,
     MedicalHistoryComponent,
-    FinancialHistoryComponent
+    FinancialHistoryComponent,
+    TranslatePipe
   ],
   templateUrl: './detail.component.html',
   styleUrl: './detail.component.css'
 })
 export class DetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  protected readonly i18n = inject(I18nService);
   private readonly patientsService = inject(PatientsService);
   protected readonly authService = inject(AuthService);
 
@@ -60,11 +64,11 @@ export class DetailComponent implements OnInit {
   }
 
   formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(iso).toLocaleDateString(this.i18n.intlLocale(), { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   formatPrice(price: string | null): string {
-    return price ? `EGP ${Number(price).toFixed(0)}` : '—';
+    return price ? `${this.i18n.t('common.egp')} ${Number(price).toFixed(0)}` : '—';
   }
 
   generateSummary(): void {

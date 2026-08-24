@@ -4,6 +4,8 @@ import { forkJoin } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { InventoryItem, MaterialUsageEntry } from '@core/models/inventory-item.model';
 import { InventoryService } from '@features/inventory/services/inventory.service';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 type ChecklistRow = FormGroup<{
   checked: FormControl<boolean>;
@@ -13,12 +15,13 @@ type ChecklistRow = FormGroup<{
 @Component({
   selector: 'app-procedure-visit',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './procedure-visit.component.html',
   styleUrl: './procedure-visit.component.css'
 })
 export class ProcedureVisitComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
+  protected readonly i18n = inject(I18nService);
   private readonly inventoryService = inject(InventoryService);
   protected readonly authService = inject(AuthService);
 
@@ -43,7 +46,7 @@ export class ProcedureVisitComponent implements OnInit {
   }
 
   formatDateTime(iso: string): string {
-    return new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleString(this.i18n.intlLocale(), { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
   submitChecklist(): void {
@@ -77,7 +80,7 @@ export class ProcedureVisitComponent implements OnInit {
       },
       error: (err) => {
         this.submitting.set(false);
-        this.submitError.set(err?.error?.message || 'Could not log some of the selected materials.');
+        this.submitError.set(err?.error?.message || this.i18n.t('inventory.logMaterialsFailed'));
       }
     });
   }

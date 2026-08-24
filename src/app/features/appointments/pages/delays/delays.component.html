@@ -1,25 +1,25 @@
 <div class="page">
   <div class="page-header">
-    <h1>Delayed Schedule</h1>
-    <p class="subtitle">Advisory only — you decide what to do about every delay.</p>
+    <h1>{{ 'nav.delays' | t }}</h1>
+    <p class="subtitle">{{ 'delays.subtitle' | t }}</p>
   </div>
 
   <div class="kpi-grid">
     @if (kpis(); as k) {
       <div class="kpi-card" [class.kpi-card-warn]="k.delayedCount > 0">
-        <span class="kpi-label">Delayed appointments today</span>
+        <span class="kpi-label">{{ 'delays.delayedToday' | t }}</span>
         <span class="kpi-value">{{ k.delayedCount }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Average delay today</span>
-        <span class="kpi-value">{{ k.averageDelayMin }} min</span>
+        <span class="kpi-label">{{ 'delays.averageDelay' | t }}</span>
+        <span class="kpi-value">{{ k.averageDelayMin }} {{ 'common.minutes' | t }}</span>
       </div>
       <div class="kpi-card" [class.kpi-card-warn]="k.longestDelayMin > 30">
-        <span class="kpi-label">Longest current delay</span>
-        <span class="kpi-value">{{ k.longestDelayMin }} min</span>
+        <span class="kpi-label">{{ 'delays.longestDelay' | t }}</span>
+        <span class="kpi-value">{{ k.longestDelayMin }} {{ 'common.minutes' | t }}</span>
       </div>
       <div class="kpi-card" [class.kpi-card-danger]="k.atRiskAfterHoursCount > 0">
-        <span class="kpi-label">Won't fit before closing</span>
+        <span class="kpi-label">{{ 'delays.wontFit' | t }}</span>
         <span class="kpi-value">{{ k.atRiskAfterHoursCount }}</span>
       </div>
     }
@@ -28,12 +28,11 @@
   @if (atRiskEntries().length > 0) {
     <section class="panel panel-danger">
       <h2 class="section-title">
-        Won't fit before closing
+        {{ 'delays.wontFit' | t }}
         <span class="risk-count">{{ atRiskEntries().length }}</span>
       </h2>
       <p class="panel-note">
-        Today's delays have pushed these visits past the doctor's finish time. Nothing has been
-        cancelled or moved — decide what to offer each patient, then record it below.
+        {{ 'delays.wontFitNote' | t }}
       </p>
 
       <div class="risk-list">
@@ -45,10 +44,10 @@
                 {{ entry.doctorName }} · {{ entry.procedureName }}
               </span>
               <span class="risk-times">
-                Booked {{ formatTime(entry.originalScheduledAt) }} ·
-                now expected {{ formatTime(entry.estimatedStartAt) }}
+                {{ 'delays.booked' | t }} {{ formatTime(entry.originalScheduledAt) }} ·
+                {{ 'delays.nowExpected' | t }} {{ formatTime(entry.estimatedStartAt) }}
                 @if (entry.closesAt) {
-                  <strong> · closes {{ entry.closesAt }}</strong>
+                  <strong> · {{ 'delays.closes' | t }} {{ entry.closesAt }}</strong>
                 }
               </span>
             </div>
@@ -57,7 +56,7 @@
                 class="mini-btn mini-btn-primary"
                 [routerLink]="['/dashboard/appointments', entry.appointmentId]"
               >
-                Offer a new time
+                {{ 'delays.offerNewTime' | t }}
               </a>
               <button
                 type="button"
@@ -65,7 +64,7 @@
                 [disabled]="actionBusyId() === entry.appointmentId"
                 (click)="act(entry, 'called')"
               >
-                Call patient
+                {{ 'delays.callPatient' | t }}
               </button>
               <button
                 type="button"
@@ -73,16 +72,16 @@
                 [disabled]="actionBusyId() === entry.appointmentId"
                 (click)="act(entry, 'notified')"
               >
-                Notify (WhatsApp)
+                {{ 'delays.notifyWhatsapp' | t }}
               </button>
               <button
                 type="button"
                 class="mini-btn mini-btn-ignore"
                 [disabled]="actionBusyId() === entry.appointmentId"
                 (click)="act(entry, 'ignored')"
-                title="Doctor is staying late — no action needed"
+                [title]="'delays.doctorWillStayTitle' | t"
               >
-                Doctor will stay
+                {{ 'delays.doctorWillStay' | t }}
               </button>
             </div>
           </div>
@@ -92,14 +91,14 @@
   }
 
   <section class="panel">
-    <h2 class="section-title">Affected appointments</h2>
+    <h2 class="section-title">{{ 'delays.affectedAppointments' | t }}</h2>
 
     @if (loading()) {
-      <p class="empty-state">Checking today's schedule...</p>
+      <p class="empty-state">{{ 'delays.checkingSchedule' | t }}</p>
     } @else if (loadError()) {
-      <p class="empty-state empty-state-error">Couldn't load the delayed schedule.</p>
+      <p class="empty-state empty-state-error">{{ 'delays.loadScheduleError' | t }}</p>
     } @else if (entries().length === 0) {
-      <p class="empty-state">Nobody is running behind right now.</p>
+      <p class="empty-state">{{ 'delays.nobodyBehind' | t }}</p>
     } @else {
       @if (actionError()) {
         <p class="form-error">{{ actionError() }}</p>
@@ -108,12 +107,12 @@
         <table class="delay-table">
           <thead>
             <tr>
-              <th>Patient</th>
-              <th>Doctor</th>
-              <th>Original time</th>
-              <th>Est. delay</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>{{ 'common.patient' | t }}</th>
+              <th>{{ 'common.doctor' | t }}</th>
+              <th>{{ 'delays.originalTime' | t }}</th>
+              <th>{{ 'delays.estDelay' | t }}</th>
+              <th>{{ 'common.status' | t }}</th>
+              <th>{{ 'common.actions' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -122,15 +121,15 @@
                 <td>
                   {{ entry.patientName }}
                   @if (entry.atRiskAfterHours) {
-                    <span class="risk-tag" title="Projected to run past the doctor's closing time">
-                      past closing
+                    <span class="risk-tag" [title]="'delays.pastClosingTitle' | t">
+                      {{ 'delays.pastClosing' | t }}
                     </span>
                   }
                 </td>
                 <td>{{ entry.doctorName }}</td>
                 <td>{{ formatTime(entry.originalScheduledAt) }}</td>
-                <td class="delay-cell">+{{ entry.estimatedDelayMin }} min</td>
-                <td><span class="status-chip status-{{ entry.visitStatus }}">{{ entry.visitStatus.replace('_', ' ') }}</span></td>
+                <td class="delay-cell">+{{ entry.estimatedDelayMin }} {{ 'common.minutes' | t }}</td>
+                <td><span class="status-chip status-{{ entry.visitStatus }}">{{ ('delays.visitStatus.' + entry.visitStatus) | t }}</span></td>
                 <td class="actions-cell">
                   <button
                     type="button"
@@ -138,7 +137,7 @@
                     [disabled]="actionBusyId() === entry.appointmentId"
                     (click)="act(entry, 'marked_waiting')"
                   >
-                    Mark waiting
+                    {{ 'delays.markWaiting' | t }}
                   </button>
                   <button
                     type="button"
@@ -146,7 +145,7 @@
                     [disabled]="actionBusyId() === entry.appointmentId"
                     (click)="act(entry, 'notified')"
                   >
-                    Notify (WhatsApp)
+                    {{ 'delays.notifyWhatsapp' | t }}
                   </button>
                   <button
                     type="button"
@@ -154,10 +153,10 @@
                     [disabled]="actionBusyId() === entry.appointmentId"
                     (click)="act(entry, 'called')"
                   >
-                    Call
+                    {{ 'delays.call' | t }}
                   </button>
                   <a class="mini-btn mini-btn-link" [routerLink]="['/dashboard/appointments', entry.appointmentId]">
-                    Reschedule
+                    {{ 'delays.reschedule' | t }}
                   </a>
                   <button
                     type="button"
@@ -165,7 +164,7 @@
                     [disabled]="actionBusyId() === entry.appointmentId"
                     (click)="act(entry, 'ignored')"
                   >
-                    Ignore
+                    {{ 'delays.ignore' | t }}
                   </button>
                 </td>
               </tr>
@@ -178,7 +177,7 @@
 
   <section class="panel">
     <div class="panel-head">
-      <h2 class="section-title">Doctor's day timeline</h2>
+      <h2 class="section-title">{{ 'delays.doctorsTimeline' | t }}</h2>
       <div class="doctor-tabs">
         @for (doc of doctors(); track doc.id) {
           <button
@@ -195,28 +194,47 @@
 
     <div class="timeline">
       <div class="timeline-hours">
-        @for (hour of timelineHours; track hour) {
-          <span class="timeline-hour">{{ hour }}:00</span>
+        @for (tick of timelineHours(); track tick.hour) {
+          <span class="timeline-hour" [style.inset-inline-start.%]="tick.leftPct">{{ tick.hour }}:00</span>
         }
       </div>
+
       <div class="timeline-track">
+        <!-- Gridlines first so every block paints over them. One line per hour
+             at the same percentage as its label, which is what lets you read a
+             block's start and end off the scale instead of guessing. -->
+        @for (tick of timelineHours(); track tick.hour) {
+          <span
+            class="timeline-gridline"
+            [class.timeline-gridline-edge]="$first || $last"
+            [style.inset-inline-start.%]="tick.leftPct"
+          ></span>
+        }
+
+        @if (nowPct(); as pct) {
+          <span class="timeline-now" [style.inset-inline-start.%]="pct">
+            <span class="timeline-now-label">{{ nowLabel() }}</span>
+          </span>
+        }
+
         @for (block of timelineBlocks(); track block.appointment.id) {
           <div
             class="timeline-block"
             [class.timeline-block-current]="block.isCurrent"
             [class.timeline-block-delayed]="block.delayMin > 0"
             [class.timeline-block-late-done]="block.lateFinishMin > 0"
-            [style.left.%]="block.leftPct"
+            [style.inset-inline-start.%]="block.leftPct"
             [style.width.%]="block.widthPct"
-            [title]="block.lateFinishMin > 0 ? block.appointment.patient.name + ' — finished ' + block.lateFinishMin + ' min past its scheduled end' : block.appointment.patient.name"
+            [title]="block.startLabel + ' – ' + block.endLabel + '  ·  ' + block.appointment.patient.name + '  ·  ' + block.appointment.procedureType.name + (block.lateFinishMin > 0 ? ('  ·  ' + ('delays.finishedLatePast' | t: { name: block.appointment.patient.name, minutes: block.lateFinishMin })) : '')"
           >
+            <span class="timeline-block-time">{{ block.startLabel }}</span>
             <span class="timeline-block-label">
               {{ block.appointment.patient.name }}
               @if (block.delayMin > 0) {
                 <span class="timeline-delay-tag">+{{ block.delayMin }}m</span>
               }
               @if (block.lateFinishMin > 0) {
-                <span class="timeline-late-tag">ran {{ block.lateFinishMin }}m over</span>
+                <span class="timeline-late-tag">{{ 'delays.ranOver' | t: { minutes: block.lateFinishMin } }}</span>
               }
             </span>
           </div>
@@ -224,10 +242,10 @@
       </div>
     </div>
     <p class="timeline-legend">
-      <span class="legend-swatch legend-current"></span> Current
-      <span class="legend-swatch legend-delayed"></span> Delayed
-      <span class="legend-swatch legend-normal"></span> On schedule
-      <span class="legend-swatch legend-late-done"></span> Finished, but ran late
+      <span class="legend-swatch legend-current"></span> {{ 'delays.legendCurrent' | t }}
+      <span class="legend-swatch legend-delayed"></span> {{ 'delays.legendDelayed' | t }}
+      <span class="legend-swatch legend-normal"></span> {{ 'delays.legendOnSchedule' | t }}
+      <span class="legend-swatch legend-late-done"></span> {{ 'delays.legendFinishedLate' | t }}
     </p>
   </section>
 </div>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
 
 @import 'tailwindcss';
 
@@ -21,9 +21,13 @@
   --color-green: #2e8b57;
   --color-green-bg: #e9f5ee;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
+  --font-sans: 'Inter', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'IBM Plex Sans Arabic', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  /* Arabic has no small-caps/mono equivalent for these faces, so Arabic text
+     in display or mono contexts still renders through this — it's the only
+     face in the stack that has Arabic glyphs at all. */
+  --font-arabic: 'IBM Plex Sans Arabic', 'Inter', system-ui, sans-serif;
 }
 
 @layer base {
@@ -37,6 +41,23 @@
     width: 100%;
     height: 100%;
     min-height: 100vh;
+  }
+
+  /* `dir` is set on <html> by I18nService.applyToDocument() when the language
+     switches. IBM Plex Sans Arabic reads better than Inter's Arabic fallback
+     glyphs, and Arabic numerals in this app stay Western (see ar.ts), so no
+     digit/number-formatting override is needed here. */
+  html[dir='rtl'] body {
+    font-family: var(--font-arabic);
+  }
+
+  /* Icons authored as LTR arrows/chevrons (breadcrumbs, "next", carets that
+     imply forward motion) need to visually flip in RTL so they still point
+     the way the eye reads. Anything semantically directional gets this class
+     in its template rather than relying on a blanket selector, since not
+     every icon should mirror (e.g. a clock, a checkmark). */
+  html[dir='rtl'] .rtl-mirror {
+    transform: scaleX(-1);
   }
 }
 

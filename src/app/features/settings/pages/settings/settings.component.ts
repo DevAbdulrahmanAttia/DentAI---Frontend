@@ -1,47 +1,61 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '@core/services/auth.service';
+import { DepositPolicyPreview, DepositType } from '@core/models/settings.model';
 import {
   ChangePasswordPayload,
   SettingsService,
   UpdateProfilePayload
 } from '@features/settings/services/settings.service';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
-type SettingsTab = 'clinic' | 'scheduling' | 'notifications' | 'account';
+type SettingsTab = 'clinic' | 'scheduling' | 'deposits' | 'notifications' | 'account';
+
+interface DepositTypeOption {
+  value: DepositType;
+  labelKey: string;
+}
+
+const DEPOSIT_TYPE_OPTIONS: DepositTypeOption[] = [
+  { value: 'fixed', labelKey: 'settings.depositType.fixed' },
+  { value: 'percentage', labelKey: 'settings.depositType.percentage' },
+  { value: 'consultation_fee', labelKey: 'settings.depositType.consultationFee' }
+];
 
 interface GranularityOption {
   value: number;
-  label: string;
+  labelKey: string;
 }
 
 const GRANULARITY_OPTIONS: GranularityOption[] = [
-  { value: 5, label: 'Every 5 minutes' },
-  { value: 10, label: 'Every 10 minutes' },
-  { value: 15, label: 'Every 15 minutes' },
-  { value: 20, label: 'Every 20 minutes' },
-  { value: 30, label: 'Every 30 minutes' },
-  { value: 60, label: 'Every hour' }
+  { value: 5, labelKey: 'settings.every5Min' },
+  { value: 10, labelKey: 'settings.every10Min' },
+  { value: 15, labelKey: 'settings.every15Min' },
+  { value: 20, labelKey: 'settings.every20Min' },
+  { value: 30, labelKey: 'settings.every30Min' },
+  { value: 60, labelKey: 'settings.everyHour' }
 ];
 
 interface WeekdayOption {
   value: string;
-  label: string;
+  labelKey: string;
 }
 
 const WEEKDAYS: WeekdayOption[] = [
-  { value: 'mon', label: 'Mon' },
-  { value: 'tue', label: 'Tue' },
-  { value: 'wed', label: 'Wed' },
-  { value: 'thu', label: 'Thu' },
-  { value: 'fri', label: 'Fri' },
-  { value: 'sat', label: 'Sat' },
-  { value: 'sun', label: 'Sun' }
+  { value: 'mon', labelKey: 'weekday.monShort' },
+  { value: 'tue', labelKey: 'weekday.tueShort' },
+  { value: 'wed', labelKey: 'weekday.wedShort' },
+  { value: 'thu', labelKey: 'weekday.thuShort' },
+  { value: 'fri', labelKey: 'weekday.friShort' },
+  { value: 'sat', labelKey: 'weekday.satShort' },
+  { value: 'sun', labelKey: 'weekday.sunShort' }
 ];
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })
@@ -49,9 +63,11 @@ export class SettingsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly settingsService = inject(SettingsService);
   protected readonly authService = inject(AuthService);
+  protected readonly i18n = inject(I18nService);
 
   protected readonly weekdays = WEEKDAYS;
   protected readonly granularityOptions = GRANULARITY_OPTIONS;
+  protected readonly depositTypeOptions = DEPOSIT_TYPE_OPTIONS;
   protected readonly activeTab = signal<SettingsTab>('account');
 
   protected readonly clinicLoading = signal(true);
@@ -63,6 +79,10 @@ export class SettingsComponent implements OnInit {
   protected readonly schedulingSaving = signal(false);
   protected readonly schedulingSaveError = signal('');
   protected readonly schedulingSaved = signal(false);
+
+  protected readonly depositsSaving = signal(false);
+  protected readonly depositsSaveError = signal('');
+  protected readonly depositsSaved = signal(false);
 
   protected readonly notificationsSaving = signal(false);
   protected readonly notificationsSaveError = signal('');
@@ -91,6 +111,22 @@ export class SettingsComponent implements OnInit {
     appointmentBufferMin: [5, [Validators.required, Validators.min(0), Validators.max(60)]],
     useLearnedDurations: [true]
   });
+
+  protected readonly depositsForm = this.fb.nonNullable.group({
+    requireDepositForHighRisk: [false],
+    depositType: ['fixed' as DepositType, Validators.required],
+    depositAmount: [200, [Validators.required, Validators.min(0)]],
+    depositMaxPercentOfPrice: [
+      50,
+      [Validators.required, Validators.min(1), Validators.max(100)]
+    ],
+    defaultConsultationFee: [250, [Validators.required, Validators.min(0)]],
+    consultationCreditedToTreatment: [true]
+  });
+
+  /** The saved policy priced across every dentist and procedure. */
+  protected readonly policyPreview = signal<DepositPolicyPreview | null>(null);
+  protected readonly policyPreviewLoading = signal(false);
 
   protected readonly notificationsForm = this.fb.nonNullable.group({
     standardReminderLeadHours: ['24', Validators.required],
@@ -128,6 +164,12 @@ export class SettingsComponent implements OnInit {
 
   setTab(tab: SettingsTab): void {
     this.activeTab.set(tab);
+    // Fetched on first open rather than at startup — it prices every dentist
+    // against every procedure, which is wasted work for anyone who never
+    // opens this tab.
+    if (tab === 'deposits' && !this.policyPreview() && !this.policyPreviewLoading()) {
+      this.loadPolicyPreview();
+    }
   }
 
   isWorkingDaySelected(day: string): boolean {
@@ -162,6 +204,14 @@ export class SettingsComponent implements OnInit {
         this.notificationsForm.setValue({
           standardReminderLeadHours: settings.standardReminderLeadHours.join(', '),
           highRiskReminderLeadHours: settings.highRiskReminderLeadHours.join(', ')
+        });
+        this.depositsForm.setValue({
+          requireDepositForHighRisk: settings.requireDepositForHighRisk,
+          depositType: settings.depositType,
+          depositAmount: Number(settings.depositAmount),
+          depositMaxPercentOfPrice: Number(settings.depositMaxPercentOfPrice),
+          defaultConsultationFee: Number(settings.defaultConsultationFee),
+          consultationCreditedToTreatment: settings.consultationCreditedToTreatment
         });
         this.clinicLoading.set(false);
       },
@@ -200,7 +250,7 @@ export class SettingsComponent implements OnInit {
         },
         error: (err) => {
           this.clinicSaving.set(false);
-          this.clinicSaveError.set(err?.error?.message || 'Could not save clinic profile.');
+          this.clinicSaveError.set(err?.error?.message || this.i18n.t('settings.saveClinicFailed'));
         }
       });
   }
@@ -231,9 +281,73 @@ export class SettingsComponent implements OnInit {
         },
         error: (err) => {
           this.schedulingSaving.set(false);
-          this.schedulingSaveError.set(err?.error?.message || 'Could not save scheduling settings.');
+          this.schedulingSaveError.set(err?.error?.message || this.i18n.t('settings.saveSchedulingFailed'));
         }
       });
+  }
+
+  saveDeposits(): void {
+    if (this.depositsForm.invalid || this.depositsSaving()) {
+      this.depositsForm.markAllAsTouched();
+      return;
+    }
+
+    this.depositsSaving.set(true);
+    this.depositsSaveError.set('');
+    this.depositsSaved.set(false);
+    const {
+      requireDepositForHighRisk,
+      depositType,
+      depositAmount,
+      depositMaxPercentOfPrice,
+      defaultConsultationFee,
+      consultationCreditedToTreatment
+    } = this.depositsForm.getRawValue();
+
+    this.settingsService
+      .updateClinicSettings({
+        requireDepositForHighRisk,
+        depositType,
+        depositAmount,
+        depositMaxPercentOfPrice,
+        defaultConsultationFee,
+        consultationCreditedToTreatment
+      })
+      .subscribe({
+        next: () => {
+          this.depositsSaving.set(false);
+          this.depositsSaved.set(true);
+          // The grid prices the *saved* policy, so it is only meaningful once
+          // the save lands — refreshing before this would show the old figures.
+          this.loadPolicyPreview();
+        },
+        error: (err) => {
+          this.depositsSaving.set(false);
+          this.depositsSaveError.set(
+            typeof err?.error?.message === 'string'
+              ? err.error.message
+              : Array.isArray(err?.error?.message)
+                ? err.error.message.join(' ')
+                : this.i18n.t('settings.saveDepositsFailed')
+          );
+        }
+      });
+  }
+
+  loadPolicyPreview(): void {
+    this.policyPreviewLoading.set(true);
+    this.settingsService.getDepositPolicyPreview().subscribe({
+      next: (preview) => {
+        this.policyPreview.set(preview);
+        this.policyPreviewLoading.set(false);
+      },
+      // Silent on failure: this is an explanatory aid beside the form, and a
+      // broken preview must not read as a broken deposit policy.
+      error: () => {
+        this.policyPreview.set(null);
+        this.policyPreviewLoading.set(false);
+      }
+    });
   }
 
   saveNotificationPreferences(): void {
@@ -269,7 +383,7 @@ export class SettingsComponent implements OnInit {
         error: (err) => {
           this.notificationsSaving.set(false);
           this.notificationsSaveError.set(
-            err?.error?.message || 'Could not save notification preferences.'
+            err?.error?.message || this.i18n.t('settings.saveNotificationsFailed')
           );
         }
       });
@@ -295,7 +409,7 @@ export class SettingsComponent implements OnInit {
       },
       error: (err) => {
         this.accountSaving.set(false);
-        this.accountSaveError.set(err?.error?.message || 'Could not save your profile.');
+        this.accountSaveError.set(err?.error?.message || this.i18n.t('settings.saveAccountFailed'));
       }
     });
   }
@@ -308,7 +422,7 @@ export class SettingsComponent implements OnInit {
 
     const { currentPassword, newPassword, confirmPassword } = this.passwordForm.getRawValue();
     if (newPassword !== confirmPassword) {
-      this.passwordSaveError.set('New password and confirmation do not match.');
+      this.passwordSaveError.set(this.i18n.t('settings.passwordsDoNotMatch'));
       return;
     }
 
@@ -325,7 +439,7 @@ export class SettingsComponent implements OnInit {
       },
       error: (err) => {
         this.passwordSaving.set(false);
-        this.passwordSaveError.set(err?.error?.message || 'Could not change your password.');
+        this.passwordSaveError.set(err?.error?.message || this.i18n.t('settings.changePasswordFailed'));
       }
     });
   }

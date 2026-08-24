@@ -11,11 +11,13 @@ import { AppointmentsService } from '@features/appointments/services/appointment
 import { PatientsService } from '@features/patients/services/patients.service';
 import { ProceduresService } from '@features/appointments/services/procedures.service';
 import { InputFieldComponent } from '@shared/ui/input-field/input-field.component';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-book-appointment-form',
   standalone: true,
-  imports: [ReactiveFormsModule, InputFieldComponent],
+  imports: [ReactiveFormsModule, InputFieldComponent, TranslatePipe],
   templateUrl: './book-appointment-form.component.html',
   styleUrl: './book-appointment-form.component.css'
 })
@@ -25,6 +27,7 @@ export class BookAppointmentFormComponent implements OnInit {
   private readonly patientsService = inject(PatientsService);
   private readonly proceduresService = inject(ProceduresService);
   private readonly appointmentsService = inject(AppointmentsService);
+  private readonly i18n = inject(I18nService);
 
   booked = output<Appointment>();
 
@@ -102,7 +105,7 @@ export class BookAppointmentFormComponent implements OnInit {
   }
 
   formatPrice(procedure: ProcedureType): string {
-    return `EGP ${Number(procedure.basePrice).toFixed(0)}`;
+    return `${this.i18n.t('common.egp')} ${Number(procedure.basePrice).toFixed(0)}`;
   }
 
   submit(): void {
@@ -129,7 +132,7 @@ export class BookAppointmentFormComponent implements OnInit {
       error: (err) => {
         this.creatingPatient.set(false);
         this.submitting.set(false);
-        this.submitError.set(err?.error?.message || 'Could not create the patient. Please try again.');
+        this.submitError.set(err?.error?.message || this.i18n.t('appointments.createPatientFailed'));
       }
     });
   }
@@ -146,7 +149,7 @@ export class BookAppointmentFormComponent implements OnInit {
       error: (err) => {
         this.submitting.set(false);
         this.submitError.set(
-          err?.error?.message || 'Could not book this appointment. That slot may already be taken.'
+          err?.error?.message || this.i18n.t('appointments.bookFailed')
         );
       }
     });

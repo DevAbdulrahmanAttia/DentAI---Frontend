@@ -31,4 +31,6 @@ export type AgentReply =
   | { type: 'clarify'; message: string }
   | { type: 'message'; message: string }
   | { type: 'analytics'; message: string; data: AgentAnalyticsSnapshot }
+  /** A patient-facing reply drafted for staff to review — null when the LLM is unreachable. */
+  | { type: 'draft'; question: string; message: string | null }
   | { type: 'unavailable' };

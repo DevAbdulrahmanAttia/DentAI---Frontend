@@ -12,6 +12,11 @@ export interface User {
    * on this rather than on `role === 'doctor'`.
    */
   isClinician?: boolean;
+  /**
+   * Examination fee for this dentist, separate from any procedure price. Null
+   * means the clinic-wide default applies. Only meaningful when `isClinician`.
+   */
+  consultationFee?: number | null;
   avatar?: string;
   phone?: string | null;
   isActive?: boolean;

@@ -217,3 +217,62 @@
   opacity: 0.65;
   cursor: not-allowed;
 }
+
+/* --- deposit policy preview -------------------------------------------- */
+
+.policy-preview {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border, #e4e9ee);
+}
+
+.section-subtitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text, #1e2b33);
+  margin: 0;
+}
+
+/* The grid is dentists x procedures, so it can outgrow a narrow panel —
+   scroll the table rather than letting it stretch the page. */
+.table-scroll {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  text-align: start;
+  font-weight: 600;
+  color: var(--color-faint, #8a96a1);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border, #e4e9ee);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border-soft, #f0f3f6);
+  color: var(--color-text, #1e2b33);
+}
+
+.data-table .numeric {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.capped-badge {
+  display: inline-block;
+  margin-inline-start: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--color-amber-soft, #fdf0d5);
+  color: var(--color-amber-strong, #8a6100);
+  font-size: 11px;
+  font-weight: 600;
+}

@@ -1,10 +1,11 @@
-import { Component, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
+import { I18nService } from '@core/i18n/i18n.service';
 
 @Component({
   selector: 'app-step-tracker',
   standalone: true,
   template: `
-    <div class="step-track" role="img" [attr.aria-label]="'Step ' + activeStep() + ' of ' + totalSteps()">
+    <div class="step-track" role="img" [attr.aria-label]="i18n.t('a11y.stepOf', { current: activeStep(), total: totalSteps() })">
       @for (step of stepsArray; track $index; let index = $index) {
         <div class="step-dot" [class.on]="index < activeStep()"></div>
       }
@@ -32,6 +33,8 @@ import { Component, input } from '@angular/core';
   `]
 })
 export class StepTrackerComponent {
+  protected readonly i18n = inject(I18nService);
+
   totalSteps = input<number>(3);
   activeStep = input<number>(1); // 1-indexed (e.g. 1 means 1 dot is green, 2 means 2 dots are green, etc.)
 

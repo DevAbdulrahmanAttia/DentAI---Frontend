@@ -66,7 +66,7 @@
 
 .panel-danger {
   border-color: var(--color-red);
-  border-left-width: 4px;
+  border-inline-start-width: 4px;
 }
 
 .panel-note {
@@ -78,7 +78,7 @@
 
 .risk-count {
   display: inline-block;
-  margin-left: 8px;
+  margin-inline-start: 8px;
   padding: 1px 9px;
   border-radius: 999px;
   background: var(--color-red);
@@ -141,7 +141,7 @@
 
 .risk-tag {
   display: inline-block;
-  margin-left: 6px;
+  margin-inline-start: 6px;
   padding: 1px 7px;
   border-radius: 999px;
   background: var(--color-red);
@@ -199,7 +199,7 @@
 }
 
 .delay-table th {
-  text-align: left;
+  text-align: start;
   font-size: 11.5px;
   font-weight: 700;
   color: var(--color-faint);
@@ -299,36 +299,92 @@
 .timeline {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
+/* Labels are absolutely positioned at the same percentages as the gridlines
+   below them. They used to be flex items with space-between, which spread them
+   evenly regardless of where the hours actually fell — so the scale and the
+   blocks disagreed. */
 .timeline-hours {
-  display: flex;
-  justify-content: space-between;
+  position: relative;
+  height: 16px;
   font-size: 10.5px;
   color: var(--color-faint);
-  padding: 0 2px;
 }
+
+.timeline-hour {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* The first and last labels would overhang the track; nudge them inward. */
+.timeline-hour:first-child { transform: translateX(0); }
+.timeline-hour:last-child { transform: translateX(-100%); }
 
 .timeline-track {
   position: relative;
-  height: 56px;
+  height: 68px;
   background: var(--color-background);
   border-radius: 8px;
   border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.timeline-gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-border);
+  pointer-events: none;
+}
+
+.timeline-gridline-edge {
+  background: transparent;
+}
+
+/* Where the clock is right now. Sits above the gridlines but below the blocks,
+   so it reads as part of the scale rather than as another appointment. */
+.timeline-now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-red, #c4433d);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.timeline-now-label {
+  position: absolute;
+  top: 2px;
+  inset-inline-start: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-red, #c4433d);
+  border-radius: 3px;
+  padding: 0 3px;
+  white-space: nowrap;
 }
 
 .timeline-block {
   position: absolute;
-  top: 8px;
-  bottom: 8px;
+  top: 10px;
+  bottom: 10px;
   background: var(--color-teal-light);
   border: 1.5px solid var(--color-teal);
   border-radius: 6px;
   overflow: hidden;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
   padding: 0 6px;
+  z-index: 4;
 }
 
 .timeline-block-delayed {
@@ -340,7 +396,7 @@
   border-color: var(--color-navy);
   background: #fff;
   box-shadow: 0 0 0 2px var(--color-navy);
-  z-index: 2;
+  z-index: 5;
 }
 
 /* Historical only — the visit is done and can't be acted on, so it keeps
@@ -349,6 +405,19 @@
 .timeline-block-late-done {
   border-style: dashed;
   border-color: var(--color-amber);
+}
+
+/* The start time inside the block, so a block can be read without tracing it
+   back to the scale. Hidden on very narrow blocks, where it would push the
+   patient's name out entirely. */
+.timeline-block-time {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--color-mute);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .timeline-block-label {
@@ -361,6 +430,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  line-height: 1.15;
 }
 
 .timeline-delay-tag {
@@ -390,11 +460,11 @@
   height: 11px;
   border-radius: 3px;
   display: inline-block;
-  margin-left: 12px;
+  margin-inline-start: 12px;
 }
 
 .legend-swatch:first-child {
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 
 .legend-current { background: #fff; border: 1.5px solid var(--color-navy); }

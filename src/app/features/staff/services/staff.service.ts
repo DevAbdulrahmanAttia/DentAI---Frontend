@@ -22,6 +22,12 @@ export interface UpdateStaffPayload {
   role?: UserRole;
   isActive?: boolean;
   isClinician?: boolean;
+  /**
+   * What this dentist charges to examine a patient. Null clears it, falling
+   * back to the clinic default — which also sizes the deposit when the clinic
+   * bills deposits as a consultation fee.
+   */
+  consultationFee?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })

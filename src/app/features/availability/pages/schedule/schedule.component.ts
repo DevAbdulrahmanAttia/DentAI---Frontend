@@ -9,29 +9,32 @@ import {
 } from '@core/models/availability.model';
 import { UsersService } from '@core/services/users.service';
 import { AvailabilityService } from '@features/availability/services/availability.service';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 interface DayRow {
   weekday: Weekday;
-  label: string;
+  /** i18n key — resolved via the `t` pipe in the template. */
+  labelKey: string;
   configured: DoctorWorkingHours | null;
   startTime: string;
   endTime: string;
 }
 
-const WEEKDAYS: { weekday: Weekday; label: string }[] = [
-  { weekday: 'mon', label: 'Monday' },
-  { weekday: 'tue', label: 'Tuesday' },
-  { weekday: 'wed', label: 'Wednesday' },
-  { weekday: 'thu', label: 'Thursday' },
-  { weekday: 'fri', label: 'Friday' },
-  { weekday: 'sat', label: 'Saturday' },
-  { weekday: 'sun', label: 'Sunday' }
+const WEEKDAYS: { weekday: Weekday; labelKey: string }[] = [
+  { weekday: 'mon', labelKey: 'weekday.mon' },
+  { weekday: 'tue', labelKey: 'weekday.tue' },
+  { weekday: 'wed', labelKey: 'weekday.wed' },
+  { weekday: 'thu', labelKey: 'weekday.thu' },
+  { weekday: 'fri', labelKey: 'weekday.fri' },
+  { weekday: 'sat', labelKey: 'weekday.sat' },
+  { weekday: 'sun', labelKey: 'weekday.sun' }
 ];
 
 @Component({
   selector: 'app-availability-schedule',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './schedule.component.html',
   styleUrl: './schedule.component.css'
 })
@@ -39,6 +42,7 @@ export class ScheduleComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly usersService = inject(UsersService);
   private readonly availabilityService = inject(AvailabilityService);
+  private readonly i18n = inject(I18nService);
 
   protected readonly doctors = signal<User[]>([]);
   protected readonly selectedDoctorId = signal<string | null>(null);
@@ -86,7 +90,7 @@ export class ScheduleComponent implements OnInit {
     const doctorId = this.selectedDoctorId();
     if (!doctorId || !day.startTime || !day.endTime) return;
     if (day.startTime >= day.endTime) {
-      this.dayError.set('Start time must be before end time.');
+      this.dayError.set(this.i18n.t('availability.startBeforeEnd'));
       return;
     }
 
@@ -101,7 +105,7 @@ export class ScheduleComponent implements OnInit {
         },
         error: (err) => {
           this.savingDay.set(null);
-          this.dayError.set(err?.error?.message || 'Could not save this day.');
+          this.dayError.set(err?.error?.message || this.i18n.t('availability.saveDayFailed'));
         }
       });
   }
@@ -132,11 +136,11 @@ export class ScheduleComponent implements OnInit {
 
     const { date, type, startTime, endTime, reason } = this.exceptionForm.getRawValue();
     if (!date) {
-      this.exceptionError.set('Pick a date.');
+      this.exceptionError.set(this.i18n.t('availability.pickDate'));
       return;
     }
     if (type === 'custom_hours' && (!startTime || !endTime)) {
-      this.exceptionError.set('Custom hours need both a start and end time.');
+      this.exceptionError.set(this.i18n.t('availability.customHoursNeedBoth'));
       return;
     }
 
@@ -159,7 +163,7 @@ export class ScheduleComponent implements OnInit {
         },
         error: (err) => {
           this.addingException.set(false);
-          this.exceptionError.set(err?.error?.message || 'Could not add this exception.');
+          this.exceptionError.set(err?.error?.message || this.i18n.t('availability.addExceptionFailed'));
         }
       });
   }

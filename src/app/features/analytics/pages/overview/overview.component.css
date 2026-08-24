@@ -147,7 +147,7 @@
 }
 
 .section-scope {
-  margin-left: 8px;
+  margin-inline-start: 8px;
   font-size: 11.5px;
   font-weight: 600;
   color: var(--color-teal, #0e7c86);
@@ -255,7 +255,7 @@
   font-weight: 600;
   color: var(--color-text, #1e2b33);
   width: 24px;
-  text-align: right;
+  text-align: end;
 }
 
 /* Profit table */
@@ -270,7 +270,7 @@
 }
 
 .profit-table th {
-  text-align: left;
+  text-align: start;
   font-size: 11.5px;
   font-weight: 700;
   color: var(--color-faint, #8a96a1);

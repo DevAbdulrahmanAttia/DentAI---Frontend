@@ -22,7 +22,6 @@ export const API_ENDPOINTS = {
   ANALYTICS: '/analytics',
   INVENTORY: '/inventory',
   NOTIFICATIONS: '/notifications',
-  SUPPORT: '/support',
   AGENT: '/agent',
   SETTINGS: '/settings',
   DELAY_MANAGEMENT: '/delay-management',

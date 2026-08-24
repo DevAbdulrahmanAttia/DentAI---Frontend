@@ -3,6 +3,8 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DailyClosingReport } from '@core/models/billing.model';
 import { BillingService } from '@features/billing/services/billing.service';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 function todayIso(): string {
   const now = new Date();
@@ -13,13 +15,14 @@ function todayIso(): string {
 @Component({
   selector: 'app-daily-closing',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './daily-closing.component.html',
   styleUrl: './daily-closing.component.css'
 })
 export class DailyClosingComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly billingService = inject(BillingService);
+  private readonly i18n = inject(I18nService);
 
   protected readonly dateControl = this.fb.nonNullable.control(todayIso());
   protected readonly report = signal<DailyClosingReport | null>(null);
@@ -39,7 +42,7 @@ export class DailyClosingComponent implements OnInit {
   }
 
   formatMoney(value: number): string {
-    return `EGP ${value.toFixed(2)}`;
+    return `${this.i18n.t('common.egp')} ${value.toFixed(2)}`;
   }
 
   private load(): void {

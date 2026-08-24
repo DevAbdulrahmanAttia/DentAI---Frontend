@@ -1,51 +1,51 @@
 <div class="page">
   <header class="page-header">
     <div>
-      <a class="back-link" routerLink="/dashboard/billing">&larr; All invoices</a>
-      <h1>Daily cash closing</h1>
-      <p class="subtitle">End-of-day cash reconciliation, not an accounting close.</p>
+      <a class="back-link" routerLink="/dashboard/billing">&larr; {{ 'billing.allInvoices' | t }}</a>
+      <h1>{{ 'billing.dailyCashClosing' | t }}</h1>
+      <p class="subtitle">{{ 'billing.dailyClosingSubtitle' | t }}</p>
     </div>
     <input type="date" [formControl]="dateControl" (change)="onDateChange()" />
   </header>
 
   @if (loading()) {
-    <p class="hint">Loading...</p>
+    <p class="hint">{{ 'common.loading' | t }}</p>
   } @else if (loadError() || !report()) {
-    <p class="error">Couldn't load the daily closing report.</p>
+    <p class="error">{{ 'billing.loadClosingError' | t }}</p>
   } @else {
     @let r = report()!;
 
     <div class="kpi-grid">
       <div class="kpi-card">
-        <span class="kpi-label">Cash</span>
+        <span class="kpi-label">{{ 'billing.method.cash' | t }}</span>
         <span class="kpi-value">{{ formatMoney(r.cash) }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Card</span>
+        <span class="kpi-label">{{ 'billing.method.card' | t }}</span>
         <span class="kpi-value">{{ formatMoney(r.card) }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">InstaPay</span>
+        <span class="kpi-label">{{ 'billing.method.instapay' | t }}</span>
         <span class="kpi-value">{{ formatMoney(r.instapay) }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Vodafone Cash</span>
+        <span class="kpi-label">{{ 'billing.method.vodafone_cash' | t }}</span>
         <span class="kpi-value">{{ formatMoney(r.vodafoneCash) }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Bank transfer</span>
+        <span class="kpi-label">{{ 'billing.method.bank_transfer' | t }}</span>
         <span class="kpi-value">{{ formatMoney(r.bankTransfer) }}</span>
       </div>
       <div class="kpi-card kpi-card-strong">
-        <span class="kpi-label">Total collected today</span>
+        <span class="kpi-label">{{ 'billing.totalCollected' | t }}</span>
         <span class="kpi-value">{{ formatMoney(totalCollected(r)) }}</span>
       </div>
       <div class="kpi-card kpi-card-danger">
-        <span class="kpi-label">Refunds today</span>
+        <span class="kpi-label">{{ 'billing.refundsToday' | t }}</span>
         <span class="kpi-value">-{{ formatMoney(r.refunds) }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Outstanding balance (clinic-wide)</span>
+        <span class="kpi-label">{{ 'billing.outstandingBalance' | t }}</span>
         <span class="kpi-value">{{ formatMoney(r.outstandingBalance) }}</span>
       </div>
     </div>

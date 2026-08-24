@@ -1,4 +1,4 @@
-import { Component, forwardRef, input, signal } from '@angular/core';
+import { Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 @Component({
@@ -22,6 +22,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
         [placeholder]="placeholder()"
         [value]="value()"
         [disabled]="disabled()"
+        [attr.dir]="forcedDir()"
         [attr.aria-invalid]="hasError() ? 'true' : 'false'"
         [attr.aria-describedby]="hasError() && errorMessage() ? id() + '-error' : null"
         (input)="onInput($event)"
@@ -85,6 +86,16 @@ export class InputFieldComponent implements ControlValueAccessor {
   placeholder = input<string>('');
   errorMessage = input<string>('');
   hasError = input<boolean>(false);
+
+  /**
+   * Phone/email/password/url values are always Latin-script and read
+   * left-to-right (a phone number typed in an RTL form must not have its
+   * digit order visually reversed by the surrounding `dir="rtl"`), so those
+   * types force `dir="ltr"` on the control regardless of UI language.
+   */
+  protected readonly forcedDir = computed(() =>
+    ['tel', 'email', 'password', 'url'].includes(this.type()) ? 'ltr' : null
+  );
 
   value = signal<string>('');
   disabled = signal<boolean>(false);

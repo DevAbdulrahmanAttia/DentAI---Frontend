@@ -1,13 +1,13 @@
 <div class="page">
   <header class="page-header">
     <div>
-      <h1>Doctor Schedules</h1>
-      <p class="subtitle">Set each doctor's weekly working hours and one-off exceptions like time off.</p>
+      <h1>{{ 'nav.availability' | t }}</h1>
+      <p class="subtitle">{{ 'availability.subtitle' | t }}</p>
     </div>
   </header>
 
   <div class="doctor-picker">
-    <label for="doctor-select">Doctor</label>
+    <label for="doctor-select">{{ 'appointments.doctor' | t }}</label>
     <select id="doctor-select" class="native-select" (change)="onDoctorChange($event)">
       @for (doctor of doctors(); track doctor.id) {
         <option [value]="doctor.id" [selected]="doctor.id === selectedDoctorId()">{{ doctor.name }}</option>
@@ -16,13 +16,13 @@
   </div>
 
   @if (doctors().length === 0) {
-    <p class="empty-state">No doctors on staff yet.</p>
+    <p class="empty-state">{{ 'availability.noDoctorsYet' | t }}</p>
   } @else {
     <section class="panel">
       <div class="panel-header">
-        <h2>Weekly hours</h2>
+        <h2>{{ 'availability.weeklyHours' | t }}</h2>
         @if (!hasCustomSchedule()) {
-          <span class="fallback-note">Using the clinic's default hours until a day is set below.</span>
+          <span class="fallback-note">{{ 'availability.usingDefaultHours' | t }}</span>
         }
       </div>
 
@@ -34,16 +34,16 @@
         <table class="days-table">
           <thead>
             <tr>
-              <th>Day</th>
-              <th>Start</th>
-              <th>End</th>
+              <th>{{ 'availability.day' | t }}</th>
+              <th>{{ 'availability.start' | t }}</th>
+              <th>{{ 'availability.end' | t }}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             @for (day of days(); track day.weekday) {
               <tr>
-                <td class="day-label">{{ day.label }}</td>
+                <td class="day-label">{{ day.labelKey | t }}</td>
                 <td>
                   <input
                     type="time"
@@ -67,7 +67,7 @@
                     [disabled]="savingDay() === day.weekday"
                     (click)="saveDay(day)"
                   >
-                    Save
+                    {{ 'common.save' | t }}
                   </button>
                   @if (day.configured) {
                     <button
@@ -76,7 +76,7 @@
                       [disabled]="savingDay() === day.weekday"
                       (click)="clearDay(day)"
                     >
-                      Off
+                      {{ 'availability.off' | t }}
                     </button>
                   }
                 </td>
@@ -89,39 +89,39 @@
 
     <section class="panel">
       <div class="panel-header">
-        <h2>Exceptions</h2>
+        <h2>{{ 'availability.exceptions' | t }}</h2>
         <button type="button" class="action-btn-primary" (click)="toggleExceptionForm()">
-          {{ showExceptionForm() ? 'Cancel' : '+ Add exception' }}
+          {{ showExceptionForm() ? ('common.cancel' | t) : ('availability.addException' | t) }}
         </button>
       </div>
 
       @if (showExceptionForm()) {
         <form [formGroup]="exceptionForm" (ngSubmit)="submitException()" class="exception-form">
           <div class="field">
-            <label for="exc-date">Date</label>
+            <label for="exc-date">{{ 'common.date' | t }}</label>
             <input id="exc-date" type="date" formControlName="date" class="native-input" />
           </div>
           <div class="field">
-            <label for="exc-type">Type</label>
+            <label for="exc-type">{{ 'availability.exceptionType' | t }}</label>
             <select id="exc-type" formControlName="type" class="native-select">
               @for (type of exceptionTypes; track type) {
-                <option [value]="type">{{ type === 'time_off' ? 'Time off' : 'Custom hours' }}</option>
+                <option [value]="type">{{ (type === 'time_off' ? 'availability.timeOff' : 'availability.customHours') | t }}</option>
               }
             </select>
           </div>
           @if (exceptionForm.value.type === 'custom_hours') {
             <div class="field">
-              <label for="exc-start">Start</label>
+              <label for="exc-start">{{ 'availability.start' | t }}</label>
               <input id="exc-start" type="time" formControlName="startTime" class="native-input" />
             </div>
             <div class="field">
-              <label for="exc-end">End</label>
+              <label for="exc-end">{{ 'availability.end' | t }}</label>
               <input id="exc-end" type="time" formControlName="endTime" class="native-input" />
             </div>
           }
           <div class="field field-wide">
-            <label for="exc-reason">Reason (optional)</label>
-            <input id="exc-reason" type="text" formControlName="reason" class="native-input" placeholder="e.g. Conference" />
+            <label for="exc-reason">{{ 'common.reasonOptional' | t }}</label>
+            <input id="exc-reason" type="text" formControlName="reason" class="native-input" [placeholder]="'availability.reasonPlaceholder' | t" />
           </div>
 
           @if (exceptionError()) {
@@ -129,13 +129,13 @@
           }
 
           <button type="submit" class="submit-btn" [disabled]="addingException()">
-            {{ addingException() ? 'Adding...' : 'Add exception' }}
+            {{ addingException() ? ('availability.addingException' | t) : ('availability.addExceptionAction' | t) }}
           </button>
         </form>
       }
 
       @if (exceptions().length === 0) {
-        <p class="empty-state">No exceptions on record.</p>
+        <p class="empty-state">{{ 'availability.noExceptions' | t }}</p>
       } @else {
         <ul class="exceptions-list">
           @for (exception of exceptions(); track exception.id) {
@@ -144,13 +144,13 @@
                 <span class="exception-date">{{ exception.date }}</span>
                 <span class="exception-detail">
                   @if (exception.type === 'time_off') {
-                    Off @if (exception.reason) { — {{ exception.reason }} }
+                    {{ 'availability.off' | t }} @if (exception.reason) { — {{ exception.reason }} }
                   } @else {
                     {{ exception.startTime }}–{{ exception.endTime }} @if (exception.reason) { — {{ exception.reason }} }
                   }
                 </span>
               </div>
-              <button type="button" class="remove-btn" (click)="removeException(exception)">Remove</button>
+              <button type="button" class="remove-btn" (click)="removeException(exception)">{{ 'availability.remove' | t }}</button>
             </li>
           }
         </ul>

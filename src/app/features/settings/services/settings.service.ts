@@ -4,7 +4,11 @@ import { Observable } from 'rxjs';
 import { API_ENDPOINTS } from '@core/constants/api-endpoints';
 import { API_URL } from '@core/tokens/api-url.token';
 import { User } from '@core/models/auth.model';
-import { ClinicSettings, UpdateClinicSettings } from '@core/models/settings.model';
+import {
+  ClinicSettings,
+  DepositPolicyPreview,
+  UpdateClinicSettings
+} from '@core/models/settings.model';
 import { environment } from '@env/environment';
 
 export interface UpdateProfilePayload {
@@ -29,6 +33,17 @@ export class SettingsService {
 
   updateClinicSettings(dto: UpdateClinicSettings): Observable<ClinicSettings> {
     return this.http.patch<ClinicSettings>(`${this.apiUrl}${API_ENDPOINTS.SETTINGS}`, dto);
+  }
+
+  /**
+   * What the saved policy would charge for every dentist/procedure pair.
+   * Reads the *saved* settings, so it reflects what patients would actually be
+   * asked for — not whatever is currently typed into the form.
+   */
+  getDepositPolicyPreview(): Observable<DepositPolicyPreview> {
+    return this.http.get<DepositPolicyPreview>(
+      `${this.apiUrl}/deposits/policy-preview`
+    );
   }
 
   updateProfile(dto: UpdateProfilePayload): Observable<User> {

@@ -13,18 +13,21 @@ import { WaitlistEntry, WaitlistStatus } from '@core/models/waitlist.model';
 import { WaitlistService } from '@features/waitlist/services/waitlist.service';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
 import { waitlistPriorityInfo, waitlistStatusInfo } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 type FilterOption = WaitlistStatus | 'all';
 
 @Component({
   selector: 'app-waitlist-manager',
   standalone: true,
-  imports: [ReactiveFormsModule, StatusPillComponent],
+  imports: [ReactiveFormsModule, StatusPillComponent, TranslatePipe],
   templateUrl: './manager.component.html',
   styleUrl: './manager.component.css'
 })
 export class ManagerComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
+  protected readonly i18n = inject(I18nService);
   private readonly waitlistService = inject(WaitlistService);
   private readonly patientsService = inject(PatientsService);
   private readonly usersService = inject(UsersService);
@@ -34,12 +37,12 @@ export class ManagerComponent implements OnInit {
   protected readonly waitlistStatusInfo = waitlistStatusInfo;
   protected readonly waitlistPriorityInfo = waitlistPriorityInfo;
 
-  protected readonly filters: { value: FilterOption; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'waiting', label: 'Waiting' },
-    { value: 'offered', label: 'Offered' },
-    { value: 'filled', label: 'Filled' },
-    { value: 'expired', label: 'Expired' }
+  protected readonly filters: { value: FilterOption; labelKey: string }[] = [
+    { value: 'all', labelKey: 'common.all' },
+    { value: 'waiting', labelKey: 'status.waiting' },
+    { value: 'offered', labelKey: 'status.offered' },
+    { value: 'filled', labelKey: 'status.filled' },
+    { value: 'expired', labelKey: 'status.expired' }
   ];
   protected readonly activeFilter = signal<FilterOption>('all');
 
@@ -131,7 +134,7 @@ export class ManagerComponent implements OnInit {
   }
 
   formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+    return new Date(iso).toLocaleDateString(this.i18n.intlLocale(), { weekday: 'short', month: 'short', day: 'numeric' });
   }
 
   toggleAddForm(): void {
@@ -181,7 +184,7 @@ export class ManagerComponent implements OnInit {
         },
         error: (err) => {
           this.adding.set(false);
-          this.addError.set(err?.error?.message || 'Could not add this patient to the waitlist.');
+          this.addError.set(err?.error?.message || this.i18n.t('waitlist.addFailed'));
         }
       });
   }
@@ -234,7 +237,7 @@ export class ManagerComponent implements OnInit {
       },
       error: (err) => {
         this.accepting.set(false);
-        this.acceptError.set(err?.error?.message || 'Could not book this slot. It may already be taken.');
+        this.acceptError.set(err?.error?.message || this.i18n.t('waitlist.bookFailed'));
       }
     });
   }

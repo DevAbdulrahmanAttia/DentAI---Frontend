@@ -1,17 +1,17 @@
 <div class="page">
   <header class="page-header">
     <div>
-      <h1>Billing</h1>
-      <p class="subtitle">Invoices, payments, and daily cash closing.</p>
+      <h1>{{ 'nav.billing' | t }}</h1>
+      <p class="subtitle">{{ 'billing.subtitle' | t }}</p>
     </div>
-    <a class="btn btn-secondary" routerLink="/dashboard/billing/daily-closing">Daily cash closing</a>
+    <a class="btn btn-secondary" routerLink="/dashboard/billing/daily-closing">{{ 'billing.dailyCashClosing' | t }}</a>
   </header>
 
   <div class="toolbar">
     <input
       class="search-input"
       type="text"
-      placeholder="Search by invoice # or patient name..."
+      [placeholder]="'billing.searchPlaceholder' | t"
       [formControl]="searchControl"
     />
     <div class="filter-tabs">
@@ -21,7 +21,7 @@
         [class.active]="statusFilter() === 'all'"
         (click)="onStatusFilterChange('all')"
       >
-        All
+        {{ 'common.all' | t }}
       </button>
       @for (status of statuses; track status) {
         <button
@@ -30,28 +30,28 @@
           [class.active]="statusFilter() === status"
           (click)="onStatusFilterChange(status)"
         >
-          {{ invoiceStatusInfo(status).label }}
+          {{ invoiceStatusInfo(status).label | t }}
         </button>
       }
     </div>
   </div>
 
   @if (loading()) {
-    <p class="hint">Loading invoices...</p>
+    <p class="hint">{{ 'billing.loadingInvoices' | t }}</p>
   } @else if (loadError()) {
-    <p class="error">Couldn't load invoices.</p>
+    <p class="error">{{ 'billing.loadInvoicesError' | t }}</p>
   } @else if (filteredInvoices.length === 0) {
-    <p class="hint">No invoices match this filter.</p>
+    <p class="hint">{{ 'billing.noInvoicesMatch' | t }}</p>
   } @else {
     <table class="invoices-table">
       <thead>
         <tr>
-          <th>Invoice #</th>
-          <th>Patient</th>
-          <th>Doctor</th>
-          <th>Issued</th>
-          <th>Amount</th>
-          <th>Status</th>
+          <th>{{ 'billing.invoiceNumber' | t }}</th>
+          <th>{{ 'common.patient' | t }}</th>
+          <th>{{ 'common.doctor' | t }}</th>
+          <th>{{ 'billing.issued' | t }}</th>
+          <th>{{ 'common.amount' | t }}</th>
+          <th>{{ 'common.status' | t }}</th>
         </tr>
       </thead>
       <tbody>
@@ -65,7 +65,7 @@
             <td>
               <app-status-pill
                 [tone]="invoiceStatusInfo(invoice.status).tone"
-                [label]="invoiceStatusInfo(invoice.status).label"
+                [label]="invoiceStatusInfo(invoice.status).label | t"
               />
             </td>
           </tr>
@@ -75,9 +75,9 @@
 
     @if (pageCount > 1) {
       <div class="pagination">
-        <button type="button" class="page-btn" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">Previous</button>
-        <span class="page-info">Page {{ page() }} of {{ pageCount }} · {{ filteredInvoices.length }} invoices</span>
-        <button type="button" class="page-btn" [disabled]="page() >= pageCount" (click)="goToPage(page() + 1)">Next</button>
+        <button type="button" class="page-btn" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">{{ 'common.previous' | t }}</button>
+        <span class="page-info">{{ 'common.pageOf' | t: { current: page(), total: pageCount } }} · {{ 'billing.invoiceCount' | t: { count: filteredInvoices.length } }}</span>
+        <button type="button" class="page-btn" [disabled]="page() >= pageCount" (click)="goToPage(page() + 1)">{{ 'common.next' | t }}</button>
       </div>
     }
   }

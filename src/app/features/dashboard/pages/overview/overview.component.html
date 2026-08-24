@@ -1,44 +1,44 @@
 <div class="page">
   <div class="page-header">
     <div>
-      <h1>Welcome back, {{ greetingName }}</h1>
-      <p class="subtitle">Here's what's happening in the clinic today.</p>
+      <h1>{{ 'dashboard.welcomeBack' | t: { name: greetingName } }}</h1>
+      <p class="subtitle">{{ 'dashboard.todaySummary' | t }}</p>
     </div>
     <div class="quick-actions">
-      <a class="action-btn action-btn-primary" routerLink="/dashboard/appointments">+ Book appointment</a>
-      <a class="action-btn action-btn-ghost" routerLink="/dashboard/waitlist">View waitlist</a>
+      <a class="action-btn action-btn-primary" routerLink="/dashboard/appointments">{{ 'dashboard.bookAppointment' | t }}</a>
+      <a class="action-btn action-btn-ghost" routerLink="/dashboard/waitlist">{{ 'dashboard.viewWaitlist' | t }}</a>
     </div>
   </div>
 
   <div class="kpi-grid">
     <div class="kpi-card">
-      <span class="kpi-label">Today's appointments</span>
+      <span class="kpi-label">{{ 'dashboard.todaysAppointments' | t }}</span>
       <span class="kpi-value">{{ totalTodayCount() }}</span>
     </div>
     <div class="kpi-card">
-      <span class="kpi-label">Completed today</span>
+      <span class="kpi-label">{{ 'dashboard.completedToday' | t }}</span>
       <span class="kpi-value">{{ doneTodayCount() }}</span>
     </div>
     <div class="kpi-card kpi-card-warn">
-      <span class="kpi-label">High no-show risk</span>
+      <span class="kpi-label">{{ 'dashboard.highNoShowRisk' | t }}</span>
       <span class="kpi-value">{{ highRiskCount() }}</span>
     </div>
     <div class="kpi-card">
-      <span class="kpi-label">Open waitlist</span>
+      <span class="kpi-label">{{ 'dashboard.openWaitlist' | t }}</span>
       <span class="kpi-value">{{ waitingCount() }}</span>
     </div>
     @if (delayKpis(); as dk) {
       <div class="kpi-card" [class.kpi-card-warn]="dk.delayedCount > 0">
-        <span class="kpi-label">Delayed today</span>
+        <span class="kpi-label">{{ 'dashboard.delayedToday' | t }}</span>
         <span class="kpi-value">{{ dk.delayedCount }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Average delay</span>
-        <span class="kpi-value">{{ dk.averageDelayMin }} min</span>
+        <span class="kpi-label">{{ 'dashboard.averageDelay' | t }}</span>
+        <span class="kpi-value">{{ dk.averageDelayMin }} {{ 'common.minutes' | t }}</span>
       </div>
       <div class="kpi-card" [class.kpi-card-warn]="dk.longestDelayMin > 30">
-        <span class="kpi-label">Longest current delay</span>
-        <span class="kpi-value">{{ dk.longestDelayMin }} min</span>
+        <span class="kpi-label">{{ 'dashboard.longestDelay' | t }}</span>
+        <span class="kpi-value">{{ dk.longestDelayMin }} {{ 'common.minutes' | t }}</span>
       </div>
     }
   </div>
@@ -46,16 +46,16 @@
   <div class="panels">
     <section class="panel">
       <div class="panel-header">
-        <h2>Today's schedule</h2>
-        <a routerLink="/dashboard/appointments">See calendar</a>
+        <h2>{{ 'dashboard.todaysSchedule' | t }}</h2>
+        <a routerLink="/dashboard/appointments">{{ 'dashboard.seeCalendar' | t }}</a>
       </div>
 
       @if (loading()) {
-        <p class="empty-state">Loading schedule...</p>
+        <p class="empty-state">{{ 'dashboard.loadingSchedule' | t }}</p>
       } @else if (loadError()) {
-        <p class="empty-state empty-state-error">Couldn't load today's appointments.</p>
+        <p class="empty-state empty-state-error">{{ 'dashboard.loadScheduleError' | t }}</p>
       } @else if (todaysAppointments().length === 0) {
-        <p class="empty-state">No appointments booked for today.</p>
+        <p class="empty-state">{{ 'dashboard.noAppointmentsToday' | t }}</p>
       } @else {
         <ul class="schedule-list">
           @for (appt of todaysAppointments(); track appt.id) {
@@ -68,12 +68,12 @@
                   @if (appt.riskLevel) {
                     <app-status-pill
                       [tone]="riskLevelInfo(appt.riskLevel).tone"
-                      [label]="riskLevelInfo(appt.riskLevel).label"
+                      [label]="riskLevelInfo(appt.riskLevel).label | t"
                     />
                   }
                   <app-status-pill
                     [tone]="appointmentStatusInfo(appt.status).tone"
-                    [label]="appointmentStatusInfo(appt.status).label"
+                    [label]="appointmentStatusInfo(appt.status).label | t"
                   />
                 </span>
               </a>
@@ -86,23 +86,23 @@
     <div class="side-col">
       <section class="panel panel-narrow">
         <div class="panel-header">
-          <h2>Waitlist</h2>
-          <a routerLink="/dashboard/waitlist">Manage</a>
+          <h2>{{ 'dashboard.waitlist' | t }}</h2>
+          <a routerLink="/dashboard/waitlist">{{ 'dashboard.manage' | t }}</a>
         </div>
 
         @if (waitlistEntries().length === 0) {
-          <p class="empty-state">No one is waiting right now.</p>
+          <p class="empty-state">{{ 'dashboard.noOneWaiting' | t }}</p>
         } @else {
           <ul class="waitlist-list">
             @for (entry of waitlistEntries(); track entry.id) {
               <li class="waitlist-row">
                 <div class="waitlist-meta">
                   <span class="waitlist-patient">{{ entry.patient.name }}</span>
-                  <span class="waitlist-date">Prefers {{ formatDate(entry.preferredDateFrom) }}</span>
+                  <span class="waitlist-date">{{ 'dashboard.prefers' | t: { date: formatDate(entry.preferredDateFrom) } }}</span>
                 </div>
                 <app-status-pill
                   [tone]="waitlistStatusInfo(entry.status).tone"
-                  [label]="waitlistStatusInfo(entry.status).label"
+                  [label]="waitlistStatusInfo(entry.status).label | t"
                 />
               </li>
             }
@@ -113,12 +113,12 @@
       @if (authService.hasRole(['owner', 'receptionist'])) {
         <section class="panel panel-narrow">
           <div class="panel-header">
-            <h2>Doctors on duty today</h2>
-            <a routerLink="/dashboard/availability">Manage</a>
+            <h2>{{ 'dashboard.doctorsOnDuty' | t }}</h2>
+            <a routerLink="/dashboard/availability">{{ 'dashboard.manage' | t }}</a>
           </div>
 
           @if (doctorsToday().length === 0) {
-            <p class="empty-state">No doctors on staff yet.</p>
+            <p class="empty-state">{{ 'dashboard.noDoctorsYet' | t }}</p>
           } @else {
             <ul class="doctor-list">
               @for (doc of doctorsToday(); track doc.doctorId) {
@@ -127,7 +127,7 @@
                   @if (doc.working) {
                     <app-status-pill tone="green" [label]="doc.startTime + '–' + doc.endTime" />
                   } @else {
-                    <app-status-pill tone="grey" label="Off" />
+                    <app-status-pill tone="grey" [label]="'dashboard.off' | t" />
                   }
                 </li>
               }

@@ -1,22 +1,24 @@
-import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { AuditLog } from '@core/models/audit-log.model';
 import { AuditLogService } from '@features/audit-log/services/audit-log.service';
 import { PillTone, StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 const PAGE_SIZE = 25;
 
 @Component({
   selector: 'app-audit-log',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, StatusPillComponent],
+  imports: [ReactiveFormsModule, StatusPillComponent, TranslatePipe],
   templateUrl: './log.component.html',
   styleUrl: './log.component.css'
 })
 export class LogComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly auditLogService = inject(AuditLogService);
+  private readonly i18n = inject(I18nService);
 
   protected readonly logs = signal<AuditLog[]>([]);
   protected readonly total = signal(0);
@@ -76,11 +78,27 @@ export class LogComponent implements OnInit {
   }
 
   actorLabel(log: AuditLog): string {
-    return log.actor?.name ?? 'Unauthenticated';
+    return log.actor?.name ?? this.i18n.t('auditLog.unauthenticated');
   }
 
   formatDetail(value: Record<string, unknown> | null): string {
     return value ? JSON.stringify(value, null, 2) : '—';
+  }
+
+  /**
+   * Replaces Angular's `date` pipe (which formats through Angular's static
+   * `LOCALE_ID`, not this app's runtime language switch) so log timestamps
+   * follow whichever language is currently active.
+   */
+  formatWhen(iso: string): string {
+    return new Date(iso).toLocaleString(this.i18n.intlLocale(), {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
   }
 
   private load(): void {

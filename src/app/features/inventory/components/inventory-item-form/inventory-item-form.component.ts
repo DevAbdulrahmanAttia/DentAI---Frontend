@@ -2,17 +2,20 @@ import { Component, OnInit, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InventoryCategory, InventoryItem } from '@core/models/inventory-item.model';
 import { InventoryService } from '@features/inventory/services/inventory.service';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-inventory-item-form',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './inventory-item-form.component.html',
   styleUrl: './inventory-item-form.component.css'
 })
 export class InventoryItemFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly inventoryService = inject(InventoryService);
+  private readonly i18n = inject(I18nService);
 
   mode = input<'add' | 'edit'>('add');
   initialValue = input<InventoryItem | undefined>(undefined);
@@ -55,9 +58,10 @@ export class InventoryItemFormComponent implements OnInit {
     }
   }
 
+  /** i18n key — resolved via the `t` pipe in the template. */
   get submitLabel(): string {
-    if (this.isSaving) return this.mode() === 'add' ? 'Adding...' : 'Saving...';
-    return this.mode() === 'add' ? 'Add item' : 'Save changes';
+    if (this.isSaving) return this.mode() === 'add' ? 'inventory.adding' : 'inventory.saving';
+    return this.mode() === 'add' ? 'inventory.addItemAction' : 'inventory.saveChanges';
   }
 
   submit(): void {
@@ -92,7 +96,7 @@ export class InventoryItemFormComponent implements OnInit {
       },
       error: (err) => {
         this.isSaving = false;
-        this.saveError = err?.error?.message || 'Could not save this item.';
+        this.saveError = err?.error?.message || this.i18n.t('inventory.saveFailed');
       }
     });
   }

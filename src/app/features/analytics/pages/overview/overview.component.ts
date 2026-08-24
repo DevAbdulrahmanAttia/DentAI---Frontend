@@ -11,6 +11,9 @@ import {
 } from '@core/models/analytics.model';
 import { AnalyticsService } from '@features/analytics/services/analytics.service';
 import { PillTone, StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
+import { alertTypeInfo } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 export type DateRangePreset = 'all-time' | 'today' | 'yesterday' | 'this-week' | 'last-week' | 'this-month' | 'last-month' | 'custom';
 
@@ -51,22 +54,23 @@ function endOfMonth(date: Date): Date {
 @Component({
   selector: 'app-analytics-overview',
   standalone: true,
-  imports: [FormsModule, StatusPillComponent],
+  imports: [FormsModule, StatusPillComponent, TranslatePipe],
   templateUrl: './overview.component.html',
   styleUrl: './overview.component.css'
 })
 export class OverviewComponent implements OnInit {
   private readonly analyticsService = inject(AnalyticsService);
+  private readonly i18n = inject(I18nService);
 
-  protected readonly datePresets: { value: DateRangePreset; label: string }[] = [
-    { value: 'all-time', label: 'All time' },
-    { value: 'today', label: 'Today' },
-    { value: 'yesterday', label: 'Yesterday' },
-    { value: 'this-week', label: 'This week' },
-    { value: 'last-week', label: 'Last week' },
-    { value: 'this-month', label: 'This month' },
-    { value: 'last-month', label: 'Last month' },
-    { value: 'custom', label: 'Custom' }
+  protected readonly datePresets: { value: DateRangePreset; labelKey: string }[] = [
+    { value: 'all-time', labelKey: 'analytics.allTime' },
+    { value: 'today', labelKey: 'analytics.today' },
+    { value: 'yesterday', labelKey: 'analytics.yesterday' },
+    { value: 'this-week', labelKey: 'analytics.thisWeek' },
+    { value: 'last-week', labelKey: 'analytics.lastWeek' },
+    { value: 'this-month', labelKey: 'analytics.thisMonth' },
+    { value: 'last-month', labelKey: 'analytics.lastMonth' },
+    { value: 'custom', labelKey: 'analytics.custom' }
   ];
   protected readonly selectedPreset = signal<DateRangePreset>('all-time');
   protected readonly customFrom = signal('');
@@ -177,18 +181,18 @@ export class OverviewComponent implements OnInit {
         this.loadRangeScoped();
         return;
       case 'today':
-        this.rangeLabel.set('Today');
+        this.rangeLabel.set(this.i18n.t('analytics.today'));
         this.loadRangeScoped(startOfDay(now).toISOString(), endOfDay(now).toISOString());
         return;
       case 'yesterday': {
         const yesterday = new Date(now);
         yesterday.setDate(yesterday.getDate() - 1);
-        this.rangeLabel.set('Yesterday');
+        this.rangeLabel.set(this.i18n.t('analytics.yesterday'));
         this.loadRangeScoped(startOfDay(yesterday).toISOString(), endOfDay(yesterday).toISOString());
         return;
       }
       case 'this-week':
-        this.rangeLabel.set('This week');
+        this.rangeLabel.set(this.i18n.t('analytics.thisWeek'));
         this.loadRangeScoped(startOfWeek(now).toISOString(), endOfDay(now).toISOString());
         return;
       case 'last-week': {
@@ -197,18 +201,18 @@ export class OverviewComponent implements OnInit {
         lastWeekStart.setDate(lastWeekStart.getDate() - 7);
         const lastWeekEnd = new Date(thisWeekStart);
         lastWeekEnd.setDate(lastWeekEnd.getDate() - 1);
-        this.rangeLabel.set('Last week');
+        this.rangeLabel.set(this.i18n.t('analytics.lastWeek'));
         this.loadRangeScoped(lastWeekStart.toISOString(), endOfDay(lastWeekEnd).toISOString());
         return;
       }
       case 'this-month':
-        this.rangeLabel.set('This month');
+        this.rangeLabel.set(this.i18n.t('analytics.thisMonth'));
         this.loadRangeScoped(startOfMonth(now).toISOString(), endOfDay(now).toISOString());
         return;
       case 'last-month': {
         const lastMonth = new Date(now);
         lastMonth.setMonth(lastMonth.getMonth() - 1);
-        this.rangeLabel.set('Last month');
+        this.rangeLabel.set(this.i18n.t('analytics.lastMonth'));
         this.loadRangeScoped(startOfMonth(lastMonth).toISOString(), endOfMonth(lastMonth).toISOString());
         return;
       }
@@ -293,11 +297,25 @@ export class OverviewComponent implements OnInit {
   }
 
   alertTone(type: AlertItem['type']): PillTone {
-    return type === 'near_expiry' ? 'red' : 'amber';
+    return alertTypeInfo(type).tone;
   }
 
   alertLabel(type: AlertItem['type']): string {
-    return type === 'near_expiry' ? 'Near expiry' : 'Low stock';
+    return alertTypeInfo(type).label;
+  }
+
+  /** i18n key for a no-show risk bucket (`high`/`medium`/`low`/anything else = unscored) — mirrors [[riskLevelInfo]]'s labels. */
+  riskLabelKey(riskKey: string): string {
+    switch (riskKey) {
+      case 'high':
+        return 'status.riskHigh';
+      case 'medium':
+        return 'status.riskMedium';
+      case 'low':
+        return 'status.riskLow';
+      default:
+        return 'status.riskUnscored';
+    }
   }
 
   riskDistributionEntries(): [string, number][] {

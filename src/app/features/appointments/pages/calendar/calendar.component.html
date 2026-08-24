@@ -1,32 +1,32 @@
 <div class="page">
   <div class="page-header">
     <div>
-      <h1>Appointments</h1>
+      <h1>{{ 'nav.appointments' | t }}</h1>
       <p class="subtitle">{{ dateLabel() }}</p>
     </div>
     @if (authService.hasRole(['receptionist', 'owner'])) {
       <button type="button" class="action-btn action-btn-primary" (click)="showBookModal.set(true)">
-        + New appointment
+        {{ 'appointments.newAppointment' | t }}
       </button>
     }
   </div>
 
   <div class="toolbar">
     <div class="date-nav">
-      <button type="button" class="nav-btn" (click)="goToPrev()" aria-label="Previous">&larr;</button>
-      <button type="button" class="nav-btn nav-btn-today" (click)="goToToday()">Today</button>
-      <button type="button" class="nav-btn" (click)="goToNext()" aria-label="Next">&rarr;</button>
+      <button type="button" class="nav-btn rtl-mirror" (click)="goToPrev()" [attr.aria-label]="'common.previous' | t">&larr;</button>
+      <button type="button" class="nav-btn nav-btn-today" (click)="goToToday()">{{ 'common.today' | t }}</button>
+      <button type="button" class="nav-btn rtl-mirror" (click)="goToNext()" [attr.aria-label]="'common.next' | t">&rarr;</button>
     </div>
 
     <div class="view-toggle">
       <button type="button" class="view-btn" [class.view-btn-active]="viewMode() === 'day'" (click)="setView('day')">
-        Day
+        {{ 'appointments.day' | t }}
       </button>
       <button type="button" class="view-btn" [class.view-btn-active]="viewMode() === 'week'" (click)="setView('week')">
-        Week
+        {{ 'appointments.week' | t }}
       </button>
       <button type="button" class="view-btn" [class.view-btn-active]="viewMode() === 'month'" (click)="setView('month')">
-        Month
+        {{ 'appointments.month' | t }}
       </button>
     </div>
 
@@ -35,7 +35,7 @@
       [value]="selectedDoctorId()"
       (change)="onDoctorFilterChange($any($event.target).value)"
     >
-      <option value="">All doctors</option>
+      <option value="">{{ 'appointments.allDoctors' | t }}</option>
       @for (doctor of doctors(); track doctor.id) {
         <option [value]="doctor.id">{{ doctor.name }}</option>
       }
@@ -46,23 +46,23 @@
       [value]="selectedRiskLevel()"
       (change)="onRiskFilterChange($any($event.target).value)"
     >
-      <option value="all">All risk levels</option>
-      <option value="high">High risk</option>
-      <option value="medium">Medium risk</option>
-      <option value="low">Low risk</option>
+      <option value="all">{{ 'appointments.allRiskLevels' | t }}</option>
+      <option value="high">{{ 'status.riskHigh' | t }}</option>
+      <option value="medium">{{ 'status.riskMedium' | t }}</option>
+      <option value="low">{{ 'status.riskLow' | t }}</option>
     </select>
   </div>
 
   @if (loading()) {
-    <p class="empty-state">Loading appointments...</p>
+    <p class="empty-state">{{ 'appointments.loading' | t }}</p>
   } @else if (loadError()) {
-    <p class="empty-state empty-state-error">Couldn't load appointments.</p>
+    <p class="empty-state empty-state-error">{{ 'appointments.loadError' | t }}</p>
   } @else {
     @switch (viewMode()) {
       @case ('day') {
         <div class="panel">
           @if (visibleAppointments().length === 0) {
-            <p class="empty-state">No appointments for this day.</p>
+            <p class="empty-state">{{ 'appointments.noneForDay' | t }}</p>
           } @else {
             <ul class="appt-list">
               @for (appt of visibleAppointments(); track appt.id) {
@@ -70,18 +70,18 @@
                   <button type="button" class="appt-link" (click)="openAppointment(appt)">
                     <span class="appt-time">{{ formatTime(appt.scheduledAt) }}</span>
                     <span class="appt-patient">{{ appt.patient.name }}</span>
-                    <span class="appt-doctor">{{ appt.doctor.name || 'Unassigned' }}</span>
+                    <span class="appt-doctor">{{ appt.doctor.name || ('appointments.unassigned' | t) }}</span>
                     <span class="appt-procedure">{{ appt.procedureType.name }}</span>
                     <span class="appt-pills">
                       @if (appt.riskLevel) {
                         <app-status-pill
                           [tone]="riskLevelInfo(appt.riskLevel).tone"
-                          [label]="riskLevelInfo(appt.riskLevel).label"
+                          [label]="riskLevelInfo(appt.riskLevel).label | t"
                         />
                       }
                       <app-status-pill
                         [tone]="appointmentStatusInfo(appt.status).tone"
-                        [label]="appointmentStatusInfo(appt.status).label"
+                        [label]="appointmentStatusInfo(appt.status).label | t"
                       />
                     </span>
                   </button>
@@ -97,7 +97,7 @@
           @for (day of weekDays(); track day.getTime()) {
             <div class="week-column">
               <button type="button" class="week-column-header" (click)="openDay(day)">
-                <span class="week-day-name">{{ day.toLocaleDateString([], { weekday: 'short' }) }}</span>
+                <span class="week-day-name">{{ day.toLocaleDateString(i18n.intlLocale(), { weekday: 'short' }) }}</span>
                 <span class="week-day-num">{{ day.getDate() }}</span>
               </button>
               <div class="week-column-body">
@@ -119,7 +119,7 @@
 
       @case ('month') {
         <div class="month-grid">
-          @for (label of ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; track label) {
+          @for (label of weekdayLabels(); track $index) {
             <div class="month-weekday-label">{{ label }}</div>
           }
           @for (cell of monthGrid(); track cell.date.getTime()) {
@@ -137,7 +137,7 @@
                   </span>
                 }
                 @if (appointmentsFor(cell.date).length > 3) {
-                  <span class="month-entry-more">+{{ appointmentsFor(cell.date).length - 3 }} more</span>
+                  <span class="month-entry-more">{{ 'common.andMore' | t: { count: appointmentsFor(cell.date).length - 3 } }}</span>
                 }
               </div>
             </button>
@@ -148,7 +148,7 @@
   }
 
   @if (showBookModal()) {
-    <app-modal title="Book appointment" (closed)="showBookModal.set(false)">
+    <app-modal [title]="'appointments.bookAppointment' | t" (closed)="showBookModal.set(false)">
       <app-book-appointment-form (booked)="onBooked($event)" />
     </app-modal>
   }

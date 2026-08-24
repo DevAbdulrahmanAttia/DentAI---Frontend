@@ -5,9 +5,11 @@ import {
   OnDestroy,
   OnInit,
   ViewChild,
+  inject,
   input,
   output
 } from '@angular/core';
+import { I18nService } from '@core/i18n/i18n.service';
 
 export type ModalVariant = 'center' | 'sheet';
 
@@ -32,7 +34,7 @@ export type ModalVariant = 'center' | 'sheet';
         @if (title()) {
           <div class="modal-header">
             <h2>{{ title() }}</h2>
-            <button type="button" class="modal-close" (click)="closed.emit()" aria-label="Close">
+            <button type="button" class="modal-close" (click)="closed.emit()" [attr.aria-label]="i18n.t('common.close')">
               &times;
             </button>
           </div>
@@ -70,13 +72,21 @@ export type ModalVariant = 'center' | 'sheet';
     .modal-panel-sheet {
       position: fixed;
       top: 0;
-      right: 0;
+      /* Logical property: lands on the right in LTR, the left in RTL, so the
+         sheet stays on the reading "end" edge in both directions. */
+      inset-inline-end: 0;
       height: 100vh;
       max-height: 100vh;
       width: 420px;
       max-width: calc(100% - 32px);
       border-radius: 0;
       animation: slide-in 0.18s ease;
+    }
+
+    /* The slide direction is physical (transform doesn't follow inset-inline-*),
+       so RTL needs its own keyframes entering from the opposite edge. */
+    :host-context([dir='rtl']) .modal-panel-sheet {
+      animation-name: slide-in-rtl;
     }
 
     .modal-header {
@@ -131,9 +141,16 @@ export type ModalVariant = 'center' | 'sheet';
       from { transform: translateX(100%); }
       to { transform: translateX(0); }
     }
+
+    @keyframes slide-in-rtl {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(0); }
+    }
   `]
 })
 export class ModalComponent implements OnInit, OnDestroy {
+  protected readonly i18n = inject(I18nService);
+
   variant = input<ModalVariant>('center');
   title = input<string>('');
   closeOnBackdrop = input<boolean>(true);

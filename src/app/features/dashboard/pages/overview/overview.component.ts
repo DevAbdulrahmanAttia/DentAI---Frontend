@@ -11,16 +11,19 @@ import { AvailabilityService } from '@features/availability/services/availabilit
 import { WaitlistService } from '@features/waitlist/services/waitlist.service';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
 import { appointmentStatusInfo, riskLevelInfo, waitlistStatusInfo } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-dashboard-overview',
   standalone: true,
-  imports: [RouterLink, StatusPillComponent],
+  imports: [RouterLink, StatusPillComponent, TranslatePipe],
   templateUrl: './overview.component.html',
   styleUrl: './overview.component.css'
 })
 export class OverviewComponent implements OnInit {
   private readonly appointmentsService = inject(AppointmentsService);
+  protected readonly i18n = inject(I18nService);
   private readonly waitlistService = inject(WaitlistService);
   private readonly delayManagementService = inject(DelayManagementService);
   private readonly availabilityService = inject(AvailabilityService);
@@ -83,11 +86,11 @@ export class OverviewComponent implements OnInit {
   }
 
   formatTime(iso: string): string {
-    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleTimeString(this.i18n.intlLocale(), { hour: '2-digit', minute: '2-digit' });
   }
 
   formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return new Date(iso).toLocaleDateString(this.i18n.intlLocale(), { month: 'short', day: 'numeric' });
   }
 
   private todayRange(): { from: string; to: string } {

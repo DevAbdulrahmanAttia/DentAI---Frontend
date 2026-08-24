@@ -14,6 +14,8 @@ import { NotificationsService } from '@features/appointments/services/notificati
 import { BillingService } from '@features/billing/services/billing.service';
 import { ProcedureVisitComponent } from '@features/inventory/components/procedure-visit/procedure-visit.component';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
+import { I18nService } from '@core/i18n/i18n.service';
 import {
   appointmentStatusInfo,
   invoiceStatusInfo,
@@ -27,12 +29,13 @@ const EXTENSION_CHOICES = [15, 30, 45];
 @Component({
   selector: 'app-appointment-details-panel',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, StatusPillComponent, ProcedureVisitComponent],
+  imports: [ReactiveFormsModule, RouterLink, StatusPillComponent, ProcedureVisitComponent, TranslatePipe],
   templateUrl: './appointment-details-panel.component.html',
   styleUrl: './appointment-details-panel.component.css'
 })
 export class AppointmentDetailsPanelComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
+  protected readonly i18n = inject(I18nService);
   private readonly appointmentsService = inject(AppointmentsService);
   private readonly notificationsService = inject(NotificationsService);
   private readonly billingService = inject(BillingService);
@@ -81,6 +84,32 @@ export class AppointmentDetailsPanelComponent implements OnInit {
   });
 
   /** Real treatment duration once the visit has both timestamps. */
+  /**
+   * How the booked length differs from the catalogue estimate, or null when
+   * they agree.
+   *
+   * `durationMin` is snapshotted at booking from what this procedure actually
+   * takes on this dentist's chair, while `procedureType.estDurationMin` is the
+   * declared figure someone typed into the catalogue. The screen used to show
+   * only the first, so a 61-minute filling looked like an arbitrary number
+   * rather than the clinic's own measured average — the whole point of
+   * learning durations was invisible.
+   */
+  protected readonly durationVsCatalogue = computed(() => {
+    const current = this.appointment();
+    if (!current) return null;
+
+    const declared = current.procedureType?.estDurationMin;
+    if (typeof declared !== 'number' || declared === current.durationMin) {
+      return null;
+    }
+    return {
+      declared,
+      booked: current.durationMin,
+      longer: current.durationMin > declared
+    };
+  });
+
   protected readonly actualDurationMinutes = computed(() => {
     const current = this.appointment();
     if (!current?.actualStartAt || !current?.actualEndAt) return null;
@@ -149,7 +178,7 @@ export class AppointmentDetailsPanelComponent implements OnInit {
   }
 
   formatDateTime(iso: string): string {
-    return new Date(iso).toLocaleString([], {
+    return new Date(iso).toLocaleString(this.i18n.intlLocale(), {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -159,7 +188,7 @@ export class AppointmentDetailsPanelComponent implements OnInit {
   }
 
   formatPrice(finalPrice: string | null): string {
-    return finalPrice ? `EGP ${Number(finalPrice).toFixed(0)}` : 'Not finalized';
+    return finalPrice ? `${this.i18n.t('common.egp')} ${Number(finalPrice).toFixed(0)}` : this.i18n.t('appointments.notFinalized');
   }
 
   loadInvoice(): void {
@@ -246,7 +275,7 @@ export class AppointmentDetailsPanelComponent implements OnInit {
       error: (err: { error?: { message?: string } }) => {
         this.lifecycleBusy.set(false);
         this.lifecycleError.set(
-          err?.error?.message ?? 'Could not complete that action.'
+          err?.error?.message ?? this.i18n.t('appointments.actionFailed')
         );
         this.loadReadiness();
       }
@@ -254,7 +283,7 @@ export class AppointmentDetailsPanelComponent implements OnInit {
   }
 
   formatTime(iso: string): string {
-    return new Date(iso).toLocaleTimeString([], {
+    return new Date(iso).toLocaleTimeString(this.i18n.intlLocale(), {
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -275,7 +304,7 @@ export class AppointmentDetailsPanelComponent implements OnInit {
       },
       error: (err) => {
         this.updating.set(false);
-        this.updateError.set(err?.error?.message || 'Could not update the appointment status.');
+        this.updateError.set(err?.error?.message || this.i18n.t('appointments.updateStatusFailed'));
       }
     });
   }
@@ -317,7 +346,7 @@ export class AppointmentDetailsPanelComponent implements OnInit {
       error: (err) => {
         this.rescheduling.set(false);
         this.rescheduleError.set(
-          err?.error?.message || 'Could not reschedule. That slot may already be taken.'
+          err?.error?.message || this.i18n.t('appointments.rescheduleFailed')
         );
       }
     });

@@ -6,9 +6,13 @@ import { AlertItem } from '@core/models/analytics.model';
 import { AnalyticsService } from '@features/analytics/services/analytics.service';
 import { AgentChatComponent } from '@features/agent/components/agent-chat/agent-chat.component';
 import { LogoComponent } from '@shared/ui/logo/logo.component';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
+import { LanguageSwitcherComponent } from '@shared/ui/language-switcher/language-switcher.component';
 
 export interface NavItem {
-  label: string;
+  /** i18n key — resolved in the template via the `t` pipe. */
+  labelKey: string;
   path: string;
   icon:
     | 'grid'
@@ -31,14 +35,22 @@ export interface NavItem {
 }
 
 export interface NavGroup {
-  label: string;
+  labelKey: string;
   items: NavItem[];
 }
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, AgentChatComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    LogoComponent,
+    AgentChatComponent,
+    TranslatePipe,
+    LanguageSwitcherComponent
+  ],
   templateUrl: './dashboard-layout.html',
   styleUrl: './dashboard-layout.css'
 })
@@ -46,6 +58,7 @@ export class DashboardLayoutComponent implements OnInit {
   protected readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly analyticsService = inject(AnalyticsService);
+  protected readonly i18n = inject(I18nService);
 
   protected readonly alerts = signal<AlertItem[]>([]);
   protected readonly showAlertsPanel = signal(false);
@@ -53,31 +66,30 @@ export class DashboardLayoutComponent implements OnInit {
 
   readonly navGroups: NavGroup[] = [
     {
-      label: 'Overview',
+      labelKey: 'nav.group.overview',
       items: [
-        { label: 'Dashboard', path: '/dashboard', icon: 'grid' },
-        { label: 'Appointments', path: '/dashboard/appointments', icon: 'calendar' },
-        { label: 'Waitlist', path: '/dashboard/waitlist', icon: 'list' },
-        { label: 'Delayed Schedule', path: '/dashboard/delays', icon: 'clock' }
+        { labelKey: 'nav.dashboard', path: '/dashboard', icon: 'grid' },
+        { labelKey: 'nav.appointments', path: '/dashboard/appointments', icon: 'calendar' },
+        { labelKey: 'nav.waitlist', path: '/dashboard/waitlist', icon: 'list' },
+        { labelKey: 'nav.delays', path: '/dashboard/delays', icon: 'clock' }
       ]
     },
     {
-      label: 'Clinic',
+      labelKey: 'nav.group.clinic',
       items: [
-        { label: 'Patients', path: '/dashboard/patients', icon: 'users' },
-        { label: 'Billing', path: '/dashboard/billing', icon: 'wallet', roles: ['owner', 'receptionist'] },
-        { label: 'Inventory', path: '/dashboard/inventory', icon: 'box', roles: ['owner', 'receptionist'] },
-        { label: 'Analytics', path: '/dashboard/analytics', icon: 'chart', roles: ['owner'] },
-        { label: 'AI Assistant', path: '/dashboard/support', icon: 'sparkle' }
+        { labelKey: 'nav.patients', path: '/dashboard/patients', icon: 'users' },
+        { labelKey: 'nav.billing', path: '/dashboard/billing', icon: 'wallet', roles: ['owner', 'receptionist'] },
+        { labelKey: 'nav.inventory', path: '/dashboard/inventory', icon: 'box', roles: ['owner', 'receptionist'] },
+        { labelKey: 'nav.analytics', path: '/dashboard/analytics', icon: 'chart', roles: ['owner'] }
       ]
     },
     {
-      label: 'System',
+      labelKey: 'nav.group.system',
       items: [
-        { label: 'Staff', path: '/dashboard/staff', icon: 'staff', roles: ['owner'] },
-        { label: 'Doctor Schedules', path: '/dashboard/availability', icon: 'schedule', roles: ['owner'] },
-        { label: 'Audit Log', path: '/dashboard/audit-log', icon: 'shield', roles: ['owner'] },
-        { label: 'Settings', path: '/dashboard/settings', icon: 'gear' }
+        { labelKey: 'nav.staff', path: '/dashboard/staff', icon: 'staff', roles: ['owner'] },
+        { labelKey: 'nav.availability', path: '/dashboard/availability', icon: 'schedule', roles: ['owner'] },
+        { labelKey: 'nav.auditLog', path: '/dashboard/audit-log', icon: 'shield', roles: ['owner'] },
+        { labelKey: 'nav.settings', path: '/dashboard/settings', icon: 'gear' }
       ]
     }
   ];
@@ -126,7 +138,7 @@ export class DashboardLayoutComponent implements OnInit {
   get roleLabel(): string {
     const role = this.authService.userRole();
     if (!role) return '';
-    return role.charAt(0).toUpperCase() + role.slice(1);
+    return this.i18n.t(`role.${role}`);
   }
 
   logout(): void {

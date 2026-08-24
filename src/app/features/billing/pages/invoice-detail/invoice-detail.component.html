@@ -1,23 +1,23 @@
 <div class="page">
   @if (loading()) {
-    <p class="hint">Loading invoice...</p>
+    <p class="hint">{{ 'billing.loadingInvoice' | t }}</p>
   } @else if (loadError() || !detail()) {
-    <p class="error">Couldn't load this invoice.</p>
+    <p class="error">{{ 'billing.loadError' | t }}</p>
   } @else {
     @let d = detail()!;
 
     <header class="page-header">
       <div>
-        <a class="back-link" routerLink="/dashboard/billing">&larr; All invoices</a>
+        <a class="back-link" routerLink="/dashboard/billing">&larr; {{ 'billing.allInvoices' | t }}</a>
         <h1>{{ d.invoice.invoiceNumber }}</h1>
         <p class="subtitle">
           {{ d.invoice.patient.name }} &middot; {{ d.invoice.doctor.name }} &middot;
-          issued {{ d.invoice.issueDate ?? 'not yet issued' }}
+          {{ 'billing.issued' | t }} {{ d.invoice.issueDate ?? ('billing.notYetIssued' | t) }}
         </p>
       </div>
       <app-status-pill
         [tone]="invoiceStatusInfo(d.invoice.status).tone"
-        [label]="invoiceStatusInfo(d.invoice.status).label"
+        [label]="invoiceStatusInfo(d.invoice.status).label | t"
       />
     </header>
 
@@ -27,10 +27,10 @@
 
     <section class="panel">
       <div class="panel-header">
-        <h2>Line items</h2>
+        <h2>{{ 'billing.lineItems' | t }}</h2>
         @if (d.invoice.status === 'draft') {
           <button type="button" class="link-btn" (click)="toggleAddItem()">
-            {{ showAddItem() ? 'Cancel' : '+ Add item' }}
+            {{ showAddItem() ? ('common.cancel' | t) : ('billing.addItem' | t) }}
           </button>
         }
       </div>
@@ -39,26 +39,26 @@
         <form class="inline-form" [formGroup]="itemForm" (ngSubmit)="submitAddItem()">
           <select formControlName="category">
             @for (category of categories; track category) {
-              <option [value]="category">{{ category }}</option>
+              <option [value]="category">{{ ('billing.category.' + category) | t }}</option>
             }
           </select>
-          <input type="text" placeholder="Description" formControlName="description" />
-          <input type="number" placeholder="Qty" min="1" formControlName="quantity" />
-          <input type="number" placeholder="Unit price" min="0" formControlName="unitPrice" />
-          <input type="number" placeholder="Discount" min="0" formControlName="discountAmount" />
-          <button type="submit" class="btn btn-primary" [disabled]="busy()">Add</button>
+          <input type="text" [placeholder]="'common.description' | t" formControlName="description" />
+          <input type="number" [placeholder]="'common.quantity' | t" min="1" formControlName="quantity" />
+          <input type="number" [placeholder]="'billing.unitPrice' | t" min="0" formControlName="unitPrice" />
+          <input type="number" [placeholder]="'billing.discount' | t" min="0" formControlName="discountAmount" />
+          <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ 'common.add' | t }}</button>
         </form>
       }
 
       <table class="items-table">
         <thead>
           <tr>
-            <th>Description</th>
-            <th>Category</th>
-            <th>Qty</th>
-            <th>Unit price</th>
-            <th>Discount</th>
-            <th>Total</th>
+            <th>{{ 'common.description' | t }}</th>
+            <th>{{ 'common.category' | t }}</th>
+            <th>{{ 'common.quantity' | t }}</th>
+            <th>{{ 'billing.unitPrice' | t }}</th>
+            <th>{{ 'billing.discount' | t }}</th>
+            <th>{{ 'common.total' | t }}</th>
             @if (d.invoice.status === 'draft') {
               <th></th>
             }
@@ -68,7 +68,7 @@
           @for (item of d.items; track item.id) {
             <tr>
               <td>{{ item.description }}</td>
-              <td class="muted">{{ item.category }}</td>
+              <td class="muted">{{ ('billing.category.' + item.category) | t }}</td>
               <td>{{ item.quantity }}</td>
               <td>{{ formatMoney(item.unitPrice) }}</td>
               <td>{{ formatMoney(item.discountAmount) }}</td>
@@ -76,7 +76,7 @@
               @if (d.invoice.status === 'draft') {
                 <td>
                   <button type="button" class="link-btn link-btn-danger" (click)="removeItem(item.id)">
-                    Remove
+                    {{ 'common.remove' | t }}
                   </button>
                 </td>
               }
@@ -87,17 +87,17 @@
     </section>
 
     <section class="panel totals-panel">
-      <h2>Totals</h2>
+      <h2>{{ 'billing.totals' | t }}</h2>
       <div class="totals-grid">
         <div class="totals-row">
-          <span>Subtotal</span><span>{{ formatMoney(d.totals.subtotal) }}</span>
+          <span>{{ 'billing.subtotal' | t }}</span><span>{{ formatMoney(d.totals.subtotal) }}</span>
         </div>
         <div class="totals-row">
-          <span>Item discounts</span><span>-{{ formatMoney(d.totals.itemDiscounts) }}</span>
+          <span>{{ 'billing.itemDiscounts' | t }}</span><span>-{{ formatMoney(d.totals.itemDiscounts) }}</span>
         </div>
         <div class="totals-row">
           <span>
-            Invoice discount
+            {{ 'billing.invoiceDiscount' | t }}
             @if (d.invoice.discountReason) {
               <span class="muted">({{ d.invoice.discountReason }})</span>
             }
@@ -105,28 +105,28 @@
           <span>-{{ formatMoney(d.totals.invoiceDiscount) }}</span>
         </div>
         <div class="totals-row totals-row-strong">
-          <span>Total</span><span>{{ formatMoney(d.totals.total) }}</span>
+          <span>{{ 'common.total' | t }}</span><span>{{ formatMoney(d.totals.total) }}</span>
         </div>
         <div class="totals-row">
-          <span>Paid</span><span>{{ formatMoney(d.totals.paidAmount) }}</span>
+          <span>{{ 'status.paid' | t }}</span><span>{{ formatMoney(d.totals.paidAmount) }}</span>
         </div>
         <div class="totals-row totals-row-strong">
-          <span>Remaining balance</span><span>{{ formatMoney(d.totals.remainingBalance) }}</span>
+          <span>{{ 'billing.remainingBalance' | t }}</span><span>{{ formatMoney(d.totals.remainingBalance) }}</span>
         </div>
       </div>
 
       <div class="actions-row">
         @if (d.invoice.status === 'draft') {
           <button type="button" class="link-btn" (click)="toggleDiscount()">
-            {{ showDiscount() ? 'Cancel discount' : 'Apply discount' }}
+            {{ showDiscount() ? ('billing.cancelDiscount' | t) : ('billing.applyDiscount' | t) }}
           </button>
           <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="issueInvoice()">
-            Issue invoice
+            {{ 'billing.issueInvoice' | t }}
           </button>
         }
         @if (d.invoice.status === 'issued' && authService.hasRole('owner')) {
           <button type="button" class="btn btn-danger" [disabled]="busy()" (click)="cancelInvoice()">
-            Cancel invoice
+            {{ 'billing.cancelInvoice' | t }}
           </button>
         }
       </div>
@@ -134,12 +134,12 @@
       @if (showDiscount()) {
         <form class="inline-form" [formGroup]="discountForm" (ngSubmit)="submitDiscount()">
           <select formControlName="discountType">
-            <option value="percentage">Percentage</option>
-            <option value="fixed">Fixed amount</option>
+            <option value="percentage">{{ 'billing.percentage' | t }}</option>
+            <option value="fixed">{{ 'billing.fixedAmount' | t }}</option>
           </select>
-          <input type="number" placeholder="Value" min="0" formControlName="discountValue" />
-          <input type="text" placeholder="Reason (optional)" formControlName="reason" />
-          <button type="submit" class="btn btn-primary" [disabled]="busy()">Apply</button>
+          <input type="number" [placeholder]="'common.value' | t" min="0" formControlName="discountValue" />
+          <input type="text" [placeholder]="'common.reasonOptional' | t" formControlName="reason" />
+          <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ 'common.apply' | t }}</button>
         </form>
       }
     </section>
@@ -147,16 +147,16 @@
     @if (d.invoice.status !== 'draft' && d.invoice.status !== 'cancelled') {
       <section class="panel">
         <div class="panel-header">
-          <h2>Payments</h2>
+          <h2>{{ 'billing.payments' | t }}</h2>
           <div class="panel-header-actions">
             @if (d.totals.remainingBalance > 0) {
               <button type="button" class="link-btn" (click)="togglePayment()">
-                {{ showPayment() ? 'Cancel' : '+ Record payment' }}
+                {{ showPayment() ? ('common.cancel' | t) : ('billing.recordPayment' | t) }}
               </button>
             }
             @if (d.totals.paidAmount > 0 && authService.hasRole('owner')) {
               <button type="button" class="link-btn link-btn-danger" (click)="toggleRefund()">
-                {{ showRefund() ? 'Cancel' : '+ Record refund' }}
+                {{ showRefund() ? ('common.cancel' | t) : ('billing.recordRefund' | t) }}
               </button>
             }
           </div>
@@ -164,46 +164,46 @@
 
         @if (showPayment()) {
           <form class="inline-form" [formGroup]="paymentForm" (ngSubmit)="submitPayment()">
-            <input type="number" placeholder="Amount" min="0.01" step="0.01" formControlName="amount" />
+            <input type="number" [placeholder]="'common.amount' | t" min="0.01" step="0.01" formControlName="amount" />
             <select formControlName="method">
               @for (method of paymentMethods; track method) {
-                <option [value]="method">{{ method }}</option>
+                <option [value]="method">{{ ('billing.method.' + method) | t }}</option>
               }
             </select>
-            <input type="text" placeholder="Notes (optional)" formControlName="notes" />
-            <button type="submit" class="btn btn-primary" [disabled]="busy()">Record</button>
+            <input type="text" [placeholder]="'common.notesOptional' | t" formControlName="notes" />
+            <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ 'common.record' | t }}</button>
           </form>
         }
 
         @if (showRefund()) {
           <form class="inline-form" [formGroup]="refundForm" (ngSubmit)="submitRefund()">
-            <input type="number" placeholder="Amount" min="0.01" step="0.01" formControlName="amount" />
+            <input type="number" [placeholder]="'common.amount' | t" min="0.01" step="0.01" formControlName="amount" />
             <select formControlName="method">
               @for (method of paymentMethods; track method) {
-                <option [value]="method">{{ method }}</option>
+                <option [value]="method">{{ ('billing.method.' + method) | t }}</option>
               }
             </select>
-            <input type="text" placeholder="Notes (optional)" formControlName="notes" />
-            <button type="submit" class="btn btn-danger" [disabled]="busy()">Refund</button>
+            <input type="text" [placeholder]="'common.notesOptional' | t" formControlName="notes" />
+            <button type="submit" class="btn btn-danger" [disabled]="busy()">{{ 'billing.refund' | t }}</button>
           </form>
         }
 
         @if (d.invoice.payments.length === 0) {
-          <p class="hint">No payments recorded yet.</p>
+          <p class="hint">{{ 'billing.noPaymentsYet' | t }}</p>
         } @else {
           <table class="items-table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Method</th>
-                <th>Amount</th>
-                <th>Notes</th>
+                <th>{{ 'common.date' | t }}</th>
+                <th>{{ 'common.method' | t }}</th>
+                <th>{{ 'common.amount' | t }}</th>
+                <th>{{ 'common.notes' | t }}</th>
               </tr>
             </thead>
             <tbody>
               @for (payment of d.invoice.payments; track payment.id) {
                 <tr [class.refund-row]="payment.isRefund">
-                  <td>{{ payment.paidAt | date: 'short' }}</td>
+                  <td>{{ formatPaymentDate(payment.paidAt) }}</td>
                   <td class="muted">{{ payment.method }}</td>
                   <td>{{ payment.isRefund ? '-' : '' }}{{ formatMoney(+payment.amount) }}</td>
                   <td class="muted">{{ payment.notes ?? '—' }}</td>

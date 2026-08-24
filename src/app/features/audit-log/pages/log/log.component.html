@@ -1,8 +1,8 @@
 <div class="page">
   <header class="page-header">
     <div>
-      <h1>Audit Log</h1>
-      <p class="subtitle">Every create, update, and delete made through the API — who did it, when, and what changed.</p>
+      <h1>{{ 'nav.auditLog' | t }}</h1>
+      <p class="subtitle">{{ 'auditLog.subtitle' | t }}</p>
     </div>
   </header>
 
@@ -14,7 +14,7 @@
         [class.active]="methodFilter() === 'all'"
         (click)="onMethodFilterChange('all')"
       >
-        All actions
+        {{ 'auditLog.allActions' | t }}
       </button>
       @for (method of methods; track method) {
         <button
@@ -32,46 +32,46 @@
       <input
         class="native-input"
         type="text"
-        placeholder="Search by action, e.g. invoices.issue"
+        [placeholder]="'auditLog.searchPlaceholder' | t"
         [formControl]="actionControl"
         (keyup.enter)="applyFilters()"
       />
       <input class="native-input" type="date" [formControl]="fromControl" />
-      <span class="filter-sep">to</span>
+      <span class="filter-sep">{{ 'analytics.to' | t }}</span>
       <input class="native-input" type="date" [formControl]="toControl" />
-      <button type="button" class="btn btn-secondary" (click)="applyFilters()">Apply</button>
-      <button type="button" class="btn btn-ghost" (click)="clearFilters()">Clear</button>
+      <button type="button" class="btn btn-secondary" (click)="applyFilters()">{{ 'common.apply' | t }}</button>
+      <button type="button" class="btn btn-ghost" (click)="clearFilters()">{{ 'common.clear' | t }}</button>
     </div>
   </div>
 
   @if (loading()) {
-    <p class="hint">Loading audit log...</p>
+    <p class="hint">{{ 'auditLog.loading' | t }}</p>
   } @else if (loadError()) {
-    <p class="error">Couldn't load the audit log.</p>
+    <p class="error">{{ 'auditLog.loadError' | t }}</p>
   } @else if (logs().length === 0) {
-    <p class="hint">No activity matches this filter.</p>
+    <p class="hint">{{ 'auditLog.noActivity' | t }}</p>
   } @else {
     <div class="table-wrap">
       <table class="log-table">
         <thead>
           <tr>
-            <th>When</th>
-            <th>Actor</th>
-            <th>Method</th>
-            <th>Action</th>
-            <th>Path</th>
-            <th>Status</th>
+            <th>{{ 'auditLog.when' | t }}</th>
+            <th>{{ 'auditLog.actor' | t }}</th>
+            <th>{{ 'auditLog.method' | t }}</th>
+            <th>{{ 'auditLog.action' | t }}</th>
+            <th>{{ 'auditLog.path' | t }}</th>
+            <th>{{ 'common.status' | t }}</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           @for (log of logs(); track log.id) {
             <tr class="row-link" (click)="toggleExpanded(log)">
-              <td class="when-cell">{{ log.createdAt | date: 'medium' }}</td>
+              <td class="when-cell">{{ formatWhen(log.createdAt) }}</td>
               <td>
                 {{ actorLabel(log) }}
                 @if (log.actorRole) {
-                  <span class="role-tag">{{ log.actorRole }}</span>
+                  <span class="role-tag">{{ ('role.' + log.actorRole) | t }}</span>
                 }
               </td>
               <td class="method-cell">{{ log.method }}</td>
@@ -87,17 +87,17 @@
                 <td colspan="7">
                   <div class="detail-grid">
                     <div>
-                      <span class="detail-label">Params</span>
+                      <span class="detail-label">{{ 'auditLog.params' | t }}</span>
                       <pre class="detail-pre">{{ formatDetail(log.params) }}</pre>
                     </div>
                     <div>
-                      <span class="detail-label">Body</span>
+                      <span class="detail-label">{{ 'auditLog.body' | t }}</span>
                       <pre class="detail-pre">{{ formatDetail(log.body) }}</pre>
                     </div>
                     <div>
-                      <span class="detail-label">Request</span>
-                      <p class="detail-meta">IP: {{ log.ipAddress ?? '—' }}</p>
-                      <p class="detail-meta">Duration: {{ log.durationMs }} ms</p>
+                      <span class="detail-label">{{ 'auditLog.request' | t }}</span>
+                      <p class="detail-meta">{{ 'auditLog.ip' | t: { ip: log.ipAddress ?? '—' } }}</p>
+                      <p class="detail-meta">{{ 'auditLog.duration' | t: { ms: log.durationMs } }}</p>
                     </div>
                   </div>
                 </td>
@@ -109,9 +109,9 @@
     </div>
 
     <div class="pagination">
-      <button type="button" class="btn btn-ghost" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">Previous</button>
-      <span class="page-info">Page {{ page() }} of {{ pageCount }} · {{ total() }} total</span>
-      <button type="button" class="btn btn-ghost" [disabled]="page() >= pageCount" (click)="goToPage(page() + 1)">Next</button>
+      <button type="button" class="btn btn-ghost" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">{{ 'common.previous' | t }}</button>
+      <span class="page-info">{{ 'common.pageOf' | t: { current: page(), total: pageCount } }} · {{ 'auditLog.total' | t: { count: total() } }}</span>
+      <button type="button" class="btn btn-ghost" [disabled]="page() >= pageCount" (click)="goToPage(page() + 1)">{{ 'common.next' | t }}</button>
     </div>
   }
 </div>

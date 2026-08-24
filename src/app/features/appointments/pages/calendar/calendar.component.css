@@ -105,7 +105,7 @@
 }
 
 .view-btn + .view-btn {
-  border-left: 1px solid var(--color-border, #e3e8ec);
+  border-inline-start: 1px solid var(--color-border, #e3e8ec);
 }
 
 .view-btn:hover {
@@ -158,7 +158,7 @@
   border: none;
   background: none;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   color: inherit;
 }
@@ -267,7 +267,7 @@
   border-radius: 6px;
   background: var(--color-background-muted, #f4f6f8);
   cursor: pointer;
-  text-align: left;
+  text-align: start;
   font: inherit;
 }
 
@@ -331,7 +331,7 @@
   align-items: flex-start;
   gap: 4px;
   cursor: pointer;
-  text-align: left;
+  text-align: start;
   font: inherit;
 }
 
@@ -364,14 +364,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding-left: 10px;
+  padding-inline-start: 10px;
   position: relative;
 }
 
 .month-entry::before {
   content: '';
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 4px;
   width: 5px;
   height: 5px;

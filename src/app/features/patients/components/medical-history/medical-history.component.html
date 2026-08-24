@@ -1,11 +1,11 @@
 <section class="panel">
   <div class="panel-head">
     <div>
-      <h2 class="section-title">Medical history</h2>
-      <p class="section-hint">Allergies, conditions and medications reviewed before treatment.</p>
+      <h2 class="section-title">{{ 'patients.medicalHistoryTitle' | t }}</h2>
+      <p class="section-hint">{{ 'patients.medicalHistoryHint' | t }}</p>
     </div>
     <button type="button" class="add-btn" (click)="toggleForm()">
-      {{ showForm() ? 'Cancel' : '+ Add entry' }}
+      {{ showForm() ? ('common.cancel' | t) : ('patients.addEntry' | t) }}
     </button>
   </div>
 
@@ -13,24 +13,24 @@
     <form class="entry-form" [formGroup]="form" (ngSubmit)="submit()">
       <div class="form-row">
         <label class="field">
-          <span class="field-label">Type</span>
+          <span class="field-label">{{ 'patients.type' | t }}</span>
           <select formControlName="type">
             @for (type of types; track type) {
-              <option [value]="type">{{ medicalTypeLabel(type) }}</option>
+              <option [value]="type">{{ medicalTypeLabel(type) | t }}</option>
             }
           </select>
         </label>
 
         <label class="field field-grow">
-          <span class="field-label">Name</span>
-          <input type="text" formControlName="name" placeholder="e.g. Lidocaine, Hypertension, Warfarin" />
+          <span class="field-label">{{ 'patients.name' | t }}</span>
+          <input type="text" formControlName="name" [placeholder]="'patients.severityNamePlaceholder' | t" />
         </label>
 
         <label class="field">
-          <span class="field-label">Severity</span>
+          <span class="field-label">{{ 'patients.severity' | t }}</span>
           <select formControlName="severity">
             @for (severity of severities; track severity) {
-              <option [value]="severity">{{ medicalSeverityInfo(severity).label }}</option>
+              <option [value]="severity">{{ medicalSeverityInfo(severity).label | t }}</option>
             }
           </select>
         </label>
@@ -38,12 +38,12 @@
 
       <label class="checkbox-field">
         <input type="checkbox" formControlName="anesthesiaRelevant" />
-        <span>Affects anesthesia (heart condition, hypertension, blood thinner, anesthetic allergy)</span>
+        <span>{{ 'patients.affectsAnesthesiaLabel' | t }}</span>
       </label>
 
       <label class="field">
-        <span class="field-label">Notes (optional)</span>
-        <input type="text" formControlName="notes" placeholder="Any detail the clinician should know" />
+        <span class="field-label">{{ 'common.notesOptional' | t }}</span>
+        <input type="text" formControlName="notes" [placeholder]="'patients.notesDetailPlaceholder' | t" />
       </label>
 
       @if (saveError()) {
@@ -51,17 +51,17 @@
       }
 
       <button type="submit" class="save-btn" [disabled]="saving()">
-        {{ saving() ? 'Saving...' : 'Save entry' }}
+        {{ saving() ? ('common.saving' | t) : ('patients.saveEntry' | t) }}
       </button>
     </form>
   }
 
   @if (loading()) {
-    <p class="empty-state">Loading medical history...</p>
+    <p class="empty-state">{{ 'patients.loadingMedicalHistory' | t }}</p>
   } @else if (loadError()) {
-    <p class="empty-state empty-state-error">Couldn't load medical history.</p>
+    <p class="empty-state empty-state-error">{{ 'patients.loadMedicalHistoryError' | t }}</p>
   } @else if (entries().length === 0) {
-    <p class="empty-state">No medical history recorded yet.</p>
+    <p class="empty-state">{{ 'patients.noMedicalHistory' | t }}</p>
   } @else {
     <ul class="entry-list">
       @for (entry of activeEntries(); track entry.id) {
@@ -71,21 +71,21 @@
               <span class="entry-name">{{ entry.name }}</span>
               <app-status-pill
                 [tone]="medicalSeverityInfo(entry.severity).tone"
-                [label]="medicalSeverityInfo(entry.severity).label"
+                [label]="medicalSeverityInfo(entry.severity).label | t"
               />
               @if (entry.anesthesiaRelevant) {
-                <app-status-pill tone="red" label="Anesthesia" />
+                <app-status-pill tone="red" [label]="'patients.anesthesia' | t" />
               }
             </div>
             <span class="entry-meta">
-              {{ medicalTypeLabel(entry.type) }} &middot; recorded {{ formatDate(entry.recordedAt) }}
+              {{ medicalTypeLabel(entry.type) | t }} &middot; {{ 'patients.recorded' | t: { date: formatDate(entry.recordedAt) } }}
               @if (entry.notes) {
                 &middot; {{ entry.notes }}
               }
             </span>
           </div>
           @if (authService.hasRole(['doctor', 'owner'])) {
-            <button type="button" class="retire-btn" (click)="retire(entry)">Retire</button>
+            <button type="button" class="retire-btn" (click)="retire(entry)">{{ 'patients.retire' | t }}</button>
           }
         </li>
       }
@@ -95,10 +95,10 @@
           <div class="entry-main">
             <div class="entry-title">
               <span class="entry-name">{{ entry.name }}</span>
-              <app-status-pill tone="grey" label="Retired" />
+              <app-status-pill tone="grey" [label]="'patients.retired' | t" />
             </div>
             <span class="entry-meta">
-              {{ medicalTypeLabel(entry.type) }} &middot; recorded {{ formatDate(entry.recordedAt) }}
+              {{ medicalTypeLabel(entry.type) | t }} &middot; {{ 'patients.recorded' | t: { date: formatDate(entry.recordedAt) } }}
             </span>
           </div>
         </li>

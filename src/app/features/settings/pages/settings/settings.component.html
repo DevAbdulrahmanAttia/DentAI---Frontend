@@ -1,53 +1,56 @@
 <div class="page">
   <div class="panel-header">
     <div>
-      <h1>Settings</h1>
-      <p class="subtitle">Manage your clinic and account.</p>
+      <h1>{{ 'nav.settings' | t }}</h1>
+      <p class="subtitle">{{ 'settings.subtitle' | t }}</p>
     </div>
   </div>
 
   <div class="tab-bar">
     @if (authService.hasRole('owner')) {
       <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'clinic'" (click)="setTab('clinic')">
-        Clinic Profile &amp; Hours
+        {{ 'settings.tabClinic' | t }}
       </button>
       <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'scheduling'" (click)="setTab('scheduling')">
-        Booking &amp; Scheduling
+        {{ 'settings.tabScheduling' | t }}
+      </button>
+      <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'deposits'" (click)="setTab('deposits')">
+        {{ 'settings.tabDeposits' | t }}
       </button>
       <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'notifications'" (click)="setTab('notifications')">
-        Notifications
+        {{ 'settings.tabNotifications' | t }}
       </button>
     }
     <button type="button" class="tab-btn" [class.tab-btn-active]="activeTab() === 'account'" (click)="setTab('account')">
-      My Account
+      {{ 'settings.tabAccount' | t }}
     </button>
   </div>
 
   @if (activeTab() === 'clinic' && authService.hasRole('owner')) {
     <div class="panel">
-      <h2 class="section-title">Clinic profile &amp; hours</h2>
+      <h2 class="section-title">{{ 'settings.clinicProfileTitle' | t }}</h2>
 
       @if (clinicLoading()) {
-        <p class="empty-state">Loading...</p>
+        <p class="empty-state">{{ 'analytics.loading' | t }}</p>
       } @else if (clinicLoadError()) {
-        <p class="empty-state empty-state-error">Couldn't load clinic settings.</p>
+        <p class="empty-state empty-state-error">{{ 'settings.loadClinicError' | t }}</p>
       } @else {
         <form class="settings-form" [formGroup]="clinicForm" (ngSubmit)="saveClinicProfile()">
           <div class="field">
-            <label for="clinicName">Clinic name</label>
+            <label for="clinicName">{{ 'settings.clinicName' | t }}</label>
             <input id="clinicName" type="text" formControlName="clinicName" class="native-input" />
           </div>
           <div class="field">
-            <label for="address">Address</label>
+            <label for="address">{{ 'settings.address' | t }}</label>
             <input id="address" type="text" formControlName="address" class="native-input" />
           </div>
           <div class="field">
-            <label for="clinicPhone">Phone</label>
-            <input id="clinicPhone" type="text" formControlName="phone" class="native-input" />
+            <label for="clinicPhone">{{ 'common.phone' | t }}</label>
+            <input id="clinicPhone" type="text" dir="ltr" formControlName="phone" class="native-input" />
           </div>
 
           <div class="field">
-            <span class="field-label-static">Working days</span>
+            <span class="field-label-static">{{ 'settings.workingDays' | t }}</span>
             <div class="weekday-row">
               @for (day of weekdays; track day.value) {
                 <button
@@ -56,7 +59,7 @@
                   [class.weekday-chip-active]="isWorkingDaySelected(day.value)"
                   (click)="toggleWorkingDay(day.value)"
                 >
-                  {{ day.label }}
+                  {{ day.labelKey | t }}
                 </button>
               }
             </div>
@@ -64,11 +67,11 @@
 
           <div class="field-row">
             <div class="field">
-              <label for="workingHoursStart">Opens at</label>
+              <label for="workingHoursStart">{{ 'settings.opensAt' | t }}</label>
               <input id="workingHoursStart" type="time" formControlName="workingHoursStart" class="native-input" />
             </div>
             <div class="field">
-              <label for="workingHoursEnd">Closes at</label>
+              <label for="workingHoursEnd">{{ 'settings.closesAt' | t }}</label>
               <input id="workingHoursEnd" type="time" formControlName="workingHoursEnd" class="native-input" />
             </div>
           </div>
@@ -77,12 +80,12 @@
             <p class="form-error">{{ clinicSaveError() }}</p>
           }
           @if (clinicSaved()) {
-            <p class="form-success">Clinic profile saved.</p>
+            <p class="form-success">{{ 'settings.clinicProfileSaved' | t }}</p>
           }
 
           <div class="form-actions">
             <button type="submit" class="submit-btn" [disabled]="clinicSaving()">
-              {{ clinicSaving() ? 'Saving...' : 'Save changes' }}
+              {{ clinicSaving() ? ('common.saving' | t) : ('common.save' | t) }}
             </button>
           </div>
         </form>
@@ -92,35 +95,35 @@
 
   @if (activeTab() === 'scheduling' && authService.hasRole('owner')) {
     <div class="panel">
-      <h2 class="section-title">Booking &amp; scheduling</h2>
-      <p class="subtitle">Controls how the online booking grid and appointment durations behave.</p>
+      <h2 class="section-title">{{ 'settings.bookingSchedulingTitle' | t }}</h2>
+      <p class="subtitle">{{ 'settings.bookingSchedulingSubtitle' | t }}</p>
 
       @if (clinicLoading()) {
-        <p class="empty-state">Loading...</p>
+        <p class="empty-state">{{ 'analytics.loading' | t }}</p>
       } @else if (clinicLoadError()) {
-        <p class="empty-state empty-state-error">Couldn't load scheduling settings.</p>
+        <p class="empty-state empty-state-error">{{ 'settings.loadSchedulingError' | t }}</p>
       } @else {
         <form class="settings-form" [formGroup]="schedulingForm" (ngSubmit)="saveScheduling()">
           <div class="field">
-            <label for="slotGranularityMin">Booking slot interval</label>
+            <label for="slotGranularityMin">{{ 'settings.slotInterval' | t }}</label>
             <select id="slotGranularityMin" formControlName="slotGranularityMin" class="native-input">
               @for (option of granularityOptions; track option.value) {
-                <option [ngValue]="option.value">{{ option.label }}</option>
+                <option [ngValue]="option.value">{{ option.labelKey | t }}</option>
               }
             </select>
-            <p class="field-hint">How often a new appointment can start. Finer intervals waste less capacity on buffers.</p>
+            <p class="field-hint">{{ 'settings.slotIntervalHint' | t }}</p>
           </div>
 
           <div class="field-row">
             <div class="field">
-              <label for="closingBufferMin">Closing buffer (minutes)</label>
+              <label for="closingBufferMin">{{ 'settings.closingBuffer' | t }}</label>
               <input id="closingBufferMin" type="number" min="0" max="120" formControlName="closingBufferMin" class="native-input" />
-              <p class="field-hint">Time held free at the end of the day to absorb a late-running schedule.</p>
+              <p class="field-hint">{{ 'settings.closingBufferHint' | t }}</p>
             </div>
             <div class="field">
-              <label for="appointmentBufferMin">Changeover buffer (minutes)</label>
+              <label for="appointmentBufferMin">{{ 'settings.changeoverBuffer' | t }}</label>
               <input id="appointmentBufferMin" type="number" min="0" max="60" formControlName="appointmentBufferMin" class="native-input" />
-              <p class="field-hint">Time assumed after each appointment before the next one can start.</p>
+              <p class="field-hint">{{ 'settings.changeoverBufferHint' | t }}</p>
             </div>
           </div>
 
@@ -128,8 +131,8 @@
             <label class="toggle-row">
               <input type="checkbox" formControlName="useLearnedDurations" class="toggle-checkbox" />
               <span>
-                <span class="field-label-static">Use learned appointment durations</span>
-                <span class="field-hint">Size bookings from what procedures actually take at this clinic instead of the declared estimate. When off, actual durations are still tracked and shown to staff, just not applied.</span>
+                <span class="field-label-static">{{ 'settings.useLearnedDurations' | t }}</span>
+                <span class="field-hint">{{ 'settings.useLearnedDurationsHint' | t }}</span>
               </span>
             </label>
           </div>
@@ -138,12 +141,12 @@
             <p class="form-error">{{ schedulingSaveError() }}</p>
           }
           @if (schedulingSaved()) {
-            <p class="form-success">Scheduling settings saved.</p>
+            <p class="form-success">{{ 'settings.schedulingSaved' | t }}</p>
           }
 
           <div class="form-actions">
             <button type="submit" class="submit-btn" [disabled]="schedulingSaving()">
-              {{ schedulingSaving() ? 'Saving...' : 'Save changes' }}
+              {{ schedulingSaving() ? ('common.saving' | t) : ('common.save' | t) }}
             </button>
           </div>
         </form>
@@ -151,23 +154,185 @@
     </div>
   }
 
-  @if (activeTab() === 'notifications' && authService.hasRole('owner')) {
+  @if (activeTab() === 'deposits' && authService.hasRole('owner')) {
     <div class="panel">
-      <h2 class="section-title">Notification preferences</h2>
-      <p class="subtitle">Comma-separated hours before the appointment to send a reminder.</p>
+      <h2 class="section-title">{{ 'settings.depositsTitle' | t }}</h2>
+      <p class="subtitle">{{ 'settings.depositsSubtitle' | t }}</p>
 
       @if (clinicLoading()) {
-        <p class="empty-state">Loading...</p>
+        <p class="empty-state">{{ 'analytics.loading' | t }}</p>
       } @else if (clinicLoadError()) {
-        <p class="empty-state empty-state-error">Couldn't load notification settings.</p>
+        <p class="empty-state empty-state-error">{{ 'settings.loadDepositsError' | t }}</p>
+      } @else {
+        <form class="settings-form" [formGroup]="depositsForm" (ngSubmit)="saveDeposits()">
+          <div class="field">
+            <label class="toggle-row">
+              <input type="checkbox" formControlName="requireDepositForHighRisk" class="toggle-checkbox" />
+              <span>
+                <span class="field-label-static">{{ 'settings.requireDepositHighRisk' | t }}</span>
+                <span class="field-hint">{{ 'settings.requireDepositHighRiskHint' | t }}</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="depositType">{{ 'settings.depositType' | t }}</label>
+              <select id="depositType" formControlName="depositType" class="native-input">
+                @for (option of depositTypeOptions; track option.value) {
+                  <option [ngValue]="option.value">{{ option.labelKey | t }}</option>
+                }
+              </select>
+            </div>
+            @if (depositsForm.controls.depositType.value !== 'consultation_fee') {
+              <div class="field">
+                <label for="depositAmount">
+                  {{ (depositsForm.controls.depositType.value === 'percentage' ? 'settings.depositPercentage' : 'settings.depositAmountEgp') | t }}
+                </label>
+                <input
+                  id="depositAmount"
+                  type="number"
+                  min="0"
+                  [max]="depositsForm.controls.depositType.value === 'percentage' ? 100 : null"
+                  step="1"
+                  formControlName="depositAmount"
+                  class="native-input"
+                />
+                <p class="field-hint">
+                  {{ (depositsForm.controls.depositType.value === 'percentage'
+                    ? 'settings.depositPercentageHint'
+                    : 'settings.depositFlatHint') | t }}
+                </p>
+              </div>
+            } @else {
+              <div class="field">
+                <label for="defaultConsultationFee">{{ 'settings.defaultConsultationFee' | t }}</label>
+                <input
+                  id="defaultConsultationFee"
+                  type="number"
+                  min="0"
+                  step="1"
+                  formControlName="defaultConsultationFee"
+                  class="native-input"
+                />
+                <p class="field-hint">
+                  {{ 'settings.defaultConsultationFeeHint' | t }}
+                </p>
+              </div>
+            }
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="depositMaxPercentOfPrice">{{ 'settings.maxDepositPercent' | t }}</label>
+              <input
+                id="depositMaxPercentOfPrice"
+                type="number"
+                min="1"
+                max="100"
+                step="1"
+                formControlName="depositMaxPercentOfPrice"
+                class="native-input"
+              />
+              <p class="field-hint">
+                {{ 'settings.maxDepositPercentHint' | t }}
+              </p>
+            </div>
+          </div>
+
+          @if (depositsForm.controls.depositType.value === 'consultation_fee') {
+            <div class="field">
+              <label class="toggle-row">
+                <input type="checkbox" formControlName="consultationCreditedToTreatment" class="toggle-checkbox" />
+                <span>
+                  <span class="field-label-static">{{ 'settings.creditConsultationFee' | t }}</span>
+                  <span class="field-hint">{{ 'settings.creditConsultationFeeHint' | t }}</span>
+                </span>
+              </label>
+            </div>
+          }
+
+          @if (depositsSaveError()) {
+            <p class="form-error">{{ depositsSaveError() }}</p>
+          }
+          @if (depositsSaved()) {
+            <p class="form-success">{{ 'settings.depositPolicySaved' | t }}</p>
+          }
+
+          <div class="form-actions">
+            <button type="submit" class="submit-btn" [disabled]="depositsSaving()">
+              {{ depositsSaving() ? ('common.saving' | t) : ('common.save' | t) }}
+            </button>
+          </div>
+        </form>
+
+        <!--
+          The saved policy priced against real procedures. Without this, the only
+          way to discover what a patient is actually asked for is to put one
+          through a live checkout.
+        -->
+        <section class="policy-preview">
+          <h3 class="section-subtitle">{{ 'settings.whatPatientsCharged' | t }}</h3>
+          @if (policyPreviewLoading()) {
+            <p class="empty-state">{{ 'settings.workingItOut' | t }}</p>
+          } @else if (!policyPreview()) {
+            <p class="empty-state">{{ 'settings.previewUnavailable' | t }}</p>
+          } @else {
+            <p class="subtitle">
+              {{ 'settings.basedOnSavedPolicy' | t: { percent: policyPreview()!.maxPercentOfPrice } }}
+            </p>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>{{ 'settings.dentist' | t }}</th>
+                    <th>{{ 'appointments.procedure' | t }}</th>
+                    <th class="numeric">{{ 'settings.price' | t }}</th>
+                    <th class="numeric">{{ 'settings.deposit' | t }}</th>
+                    <th class="numeric">{{ 'settings.share' | t }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of policyPreview()!.rows; track row.doctorName + row.procedureName) {
+                    <tr>
+                      <td>{{ row.doctorName }}</td>
+                      <td>{{ row.procedureName }}</td>
+                      <td class="numeric">{{ row.procedurePrice }}</td>
+                      <td class="numeric">
+                        {{ row.depositEgp }}
+                        @if (row.cappedByLimit) {
+                          <span class="capped-badge" [title]="'settings.cappedTitle' | t">{{ 'settings.capped' | t }}</span>
+                        }
+                      </td>
+                      <td class="numeric">{{ row.percentOfPrice }}%</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+      }
+    </div>
+  }
+
+  @if (activeTab() === 'notifications' && authService.hasRole('owner')) {
+    <div class="panel">
+      <h2 class="section-title">{{ 'settings.notificationPrefsTitle' | t }}</h2>
+      <p class="subtitle">{{ 'settings.notificationPrefsSubtitle' | t }}</p>
+
+      @if (clinicLoading()) {
+        <p class="empty-state">{{ 'analytics.loading' | t }}</p>
+      } @else if (clinicLoadError()) {
+        <p class="empty-state empty-state-error">{{ 'settings.loadNotificationsError' | t }}</p>
       } @else {
         <form class="settings-form" [formGroup]="notificationsForm" (ngSubmit)="saveNotificationPreferences()">
           <div class="field">
-            <label for="standardLeadHours">Standard reminder lead time (hours)</label>
+            <label for="standardLeadHours">{{ 'settings.standardLeadTime' | t }}</label>
             <input id="standardLeadHours" type="text" formControlName="standardReminderLeadHours" class="native-input" placeholder="e.g. 24" />
           </div>
           <div class="field">
-            <label for="highRiskLeadHours">High-risk patient reminder lead times (hours)</label>
+            <label for="highRiskLeadHours">{{ 'settings.highRiskLeadTime' | t }}</label>
             <input id="highRiskLeadHours" type="text" formControlName="highRiskReminderLeadHours" class="native-input" placeholder="e.g. 48, 24, 3" />
           </div>
 
@@ -175,12 +340,12 @@
             <p class="form-error">{{ notificationsSaveError() }}</p>
           }
           @if (notificationsSaved()) {
-            <p class="form-success">Notification preferences saved.</p>
+            <p class="form-success">{{ 'settings.notificationPrefsSaved' | t }}</p>
           }
 
           <div class="form-actions">
             <button type="submit" class="submit-btn" [disabled]="notificationsSaving()">
-              {{ notificationsSaving() ? 'Saving...' : 'Save changes' }}
+              {{ notificationsSaving() ? ('common.saving' | t) : ('common.save' | t) }}
             </button>
           </div>
         </form>
@@ -190,49 +355,49 @@
 
   @if (activeTab() === 'account') {
     <div class="panel">
-      <h2 class="section-title">My account</h2>
+      <h2 class="section-title">{{ 'settings.myAccountTitle' | t }}</h2>
       <form class="settings-form" [formGroup]="accountForm" (ngSubmit)="saveAccount()">
         <div class="field">
-          <label for="name">Full name</label>
+          <label for="name">{{ 'patients.fullName' | t }}</label>
           <input id="name" type="text" formControlName="name" class="native-input" />
         </div>
         <div class="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" formControlName="email" class="native-input" />
+          <label for="email">{{ 'common.email' | t }}</label>
+          <input id="email" type="email" dir="ltr" formControlName="email" class="native-input" />
         </div>
         <div class="field">
-          <label for="accountPhone">Phone</label>
-          <input id="accountPhone" type="text" formControlName="phone" class="native-input" />
+          <label for="accountPhone">{{ 'common.phone' | t }}</label>
+          <input id="accountPhone" type="text" dir="ltr" formControlName="phone" class="native-input" />
         </div>
 
         @if (accountSaveError()) {
           <p class="form-error">{{ accountSaveError() }}</p>
         }
         @if (accountSaved()) {
-          <p class="form-success">Profile saved.</p>
+          <p class="form-success">{{ 'settings.profileSaved' | t }}</p>
         }
 
         <div class="form-actions">
           <button type="submit" class="submit-btn" [disabled]="accountSaving()">
-            {{ accountSaving() ? 'Saving...' : 'Save changes' }}
+            {{ accountSaving() ? ('common.saving' | t) : ('common.save' | t) }}
           </button>
         </div>
       </form>
     </div>
 
     <div class="panel">
-      <h2 class="section-title">Change password</h2>
+      <h2 class="section-title">{{ 'settings.changePasswordTitle' | t }}</h2>
       <form class="settings-form" [formGroup]="passwordForm" (ngSubmit)="changePassword()">
         <div class="field">
-          <label for="currentPassword">Current password</label>
+          <label for="currentPassword">{{ 'settings.currentPassword' | t }}</label>
           <input id="currentPassword" type="password" formControlName="currentPassword" class="native-input" />
         </div>
         <div class="field">
-          <label for="newPassword">New password</label>
+          <label for="newPassword">{{ 'settings.newPassword' | t }}</label>
           <input id="newPassword" type="password" formControlName="newPassword" class="native-input" />
         </div>
         <div class="field">
-          <label for="confirmPassword">Confirm new password</label>
+          <label for="confirmPassword">{{ 'settings.confirmNewPassword' | t }}</label>
           <input id="confirmPassword" type="password" formControlName="confirmPassword" class="native-input" />
         </div>
 
@@ -240,12 +405,12 @@
           <p class="form-error">{{ passwordSaveError() }}</p>
         }
         @if (passwordSaved()) {
-          <p class="form-success">Password updated.</p>
+          <p class="form-success">{{ 'settings.passwordUpdated' | t }}</p>
         }
 
         <div class="form-actions">
           <button type="submit" class="submit-btn" [disabled]="passwordSaving()">
-            {{ passwordSaving() ? 'Updating...' : 'Update password' }}
+            {{ passwordSaving() ? ('settings.updating' | t) : ('settings.updatePassword' | t) }}
           </button>
         </div>
       </form>

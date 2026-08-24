@@ -1,17 +1,17 @@
 <div class="procedure-visit">
-  <h2 class="section-title">Materials used</h2>
+  <h2 class="section-title">{{ 'inventory.materialsUsed' | t }}</h2>
 
   @if (usageLoading()) {
-    <p class="empty-state">Loading materials...</p>
+    <p class="empty-state">{{ 'inventory.loadingMaterials' | t }}</p>
   } @else if (loggedUsage().length === 0) {
-    <p class="empty-state">No materials logged for this visit yet.</p>
+    <p class="empty-state">{{ 'inventory.noMaterialsLogged' | t }}</p>
   } @else {
     <ul class="usage-list">
       @for (entry of loggedUsage(); track entry.id) {
         <li class="usage-row">
           <span class="usage-name">{{ entry.inventoryItem.name }}</span>
           <span class="usage-qty">{{ entry.quantityUsed }} {{ entry.inventoryItem.unit }}</span>
-          <span class="usage-cost">EGP {{ entry.unitCostAtTime }} each</span>
+          <span class="usage-cost">{{ 'common.egp' | t }} {{ entry.unitCostAtTime }} {{ 'inventory.each' | t }}</span>
           <span class="usage-time">{{ formatDateTime(entry.loggedAt) }}</span>
         </li>
       }
@@ -20,9 +20,9 @@
 
   @if (authService.isClinician()) {
     @if (itemsLoading()) {
-      <p class="empty-state">Loading inventory...</p>
+      <p class="empty-state">{{ 'inventory.loading' | t }}</p>
     } @else if (items().length === 0) {
-      <p class="empty-state">No inventory items to log.</p>
+      <p class="empty-state">{{ 'inventory.noItemsToLog' | t }}</p>
     } @else {
       <div class="checklist">
         @for (item of items(); track item.id; let i = $index) {
@@ -30,7 +30,7 @@
             <label class="checklist-check">
               <input type="checkbox" formControlName="checked" [disabled]="+item.quantityInStock === 0" />
               {{ item.name }}
-              <span class="checklist-stock">({{ item.quantityInStock }} {{ item.unit }} available)</span>
+              <span class="checklist-stock">({{ item.quantityInStock }} {{ item.unit }} {{ 'inventory.available' | t }})</span>
             </label>
             <input
               type="number"
@@ -38,7 +38,7 @@
               step="0.01"
               formControlName="quantity"
               class="checklist-qty"
-              [attr.aria-label]="'Quantity of ' + item.name"
+              [attr.aria-label]="'inventory.quantityOf' | t: { name: item.name }"
             />
           </div>
         }
@@ -49,7 +49,7 @@
       }
 
       <button type="button" class="submit-btn" [disabled]="submitting()" (click)="submitChecklist()">
-        {{ submitting() ? 'Logging...' : 'Log materials' }}
+        {{ submitting() ? ('inventory.logging' | t) : ('inventory.logMaterials' | t) }}
       </button>
     }
   }

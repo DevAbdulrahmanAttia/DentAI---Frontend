@@ -9,16 +9,19 @@ import { AuthService } from '@core/services/auth.service';
 import { PatientsService } from '@features/patients/services/patients.service';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
 import { medicalSeverityInfo, medicalTypeLabel } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-medical-history',
   standalone: true,
-  imports: [ReactiveFormsModule, StatusPillComponent],
+  imports: [ReactiveFormsModule, StatusPillComponent, TranslatePipe],
   templateUrl: './medical-history.component.html',
   styleUrl: './medical-history.component.css'
 })
 export class MedicalHistoryComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
+  protected readonly i18n = inject(I18nService);
   private readonly patientsService = inject(PatientsService);
   protected readonly authService = inject(AuthService);
 
@@ -112,7 +115,7 @@ export class MedicalHistoryComponent implements OnInit {
         },
         error: (err: { error?: { message?: string } }) => {
           this.saving.set(false);
-          this.saveError.set(err?.error?.message ?? 'Could not save this entry.');
+          this.saveError.set(err?.error?.message ?? this.i18n.t('patients.saveEntryFailed'));
         }
       });
   }
@@ -124,7 +127,7 @@ export class MedicalHistoryComponent implements OnInit {
   }
 
   formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString([], {
+    return new Date(iso).toLocaleDateString(this.i18n.intlLocale(), {
       year: 'numeric',
       month: 'short',
       day: 'numeric'

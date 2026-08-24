@@ -1,6 +1,6 @@
 :host {
   position: fixed;
-  right: 24px;
+  inset-inline-end: 24px;
   bottom: 24px;
   z-index: 200;
   display: block;
@@ -46,7 +46,7 @@
 
 .panel {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 74px;
   width: 380px;
   max-width: calc(100vw - 32px);
@@ -167,14 +167,14 @@
 .bubble-user {
   background: var(--color-navy, #0f2a47);
   color: #fff;
-  border-bottom-right-radius: 4px;
+  border-end-end-radius: 4px;
 }
 
 .bubble-agent {
   background: #fff;
   color: var(--color-text, #16202b);
   border: 1px solid var(--color-border, #e1e7ea);
-  border-bottom-left-radius: 4px;
+  border-end-start-radius: 4px;
 }
 
 .bubble-clarify {
@@ -577,4 +577,133 @@
 
 .send-btn:hover:not(:disabled) {
   background: var(--color-navy, #0f2a47);
+}
+
+/* ---------------------------------------------------------------- draft card
+   A patient-facing reply drafted for staff to review and send — visually a
+   quieter sibling of .action-card, since nothing is executed on confirm. */
+.draft-card {
+  max-width: 88%;
+  background: #fff;
+  border: 1.5px solid var(--color-border, #e1e7ea);
+  border-radius: 14px;
+  padding: 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.draft-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.draft-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-teal, #0e7c86);
+  background: var(--color-teal-light, #e3f1f2);
+  flex-shrink: 0;
+}
+
+.draft-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.draft-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-mute, #5c6b78);
+}
+
+.draft-question {
+  margin: 0;
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--color-mute, #5c6b78);
+  line-height: 1.4;
+  padding-inline-start: 10px;
+  border-inline-start: 2px solid var(--color-border, #e1e7ea);
+}
+
+.draft-text {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-text, #16202b);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+/* Note and copy share a row: the answer above is the thing staff act on, so
+   the affordances stay visually subordinate to it. */
+.draft-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.draft-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+  border: 1.5px solid var(--color-border, #e1e7ea);
+  color: var(--color-mute, #5c6b78);
+}
+
+.draft-copy-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.draft-copy-btn:hover {
+  border-color: var(--color-teal, #0e7c86);
+  color: var(--color-teal, #0e7c86);
+}
+
+.draft-copy-btn-done {
+  border-color: var(--color-green, #2e8b57);
+  color: var(--color-green, #2e8b57);
+}
+
+.draft-note {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--color-mute, #5c6b78);
+  line-height: 1.45;
+}
+
+.draft-note-empty {
+  font-size: 12.5px;
+}
+
+/* The exact text a "send the draft" action will put on WhatsApp — shown in
+   full on the confirmation card, since the summary above only names the
+   action and this one leaves the clinic. */
+.action-draft-preview {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--color-background, #f5f8f9);
+  border-inline-start: 2px solid var(--color-teal, #0e7c86);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-text, #16202b);
+  white-space: pre-wrap;
 }

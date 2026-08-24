@@ -6,6 +6,8 @@ import { ButtonComponent } from '@shared/ui/button/button.component';
 import { InputFieldComponent } from '@shared/ui/input-field/input-field.component';
 import { OtpInputComponent } from '@shared/ui/otp-input/otp-input.component';
 import { StepTrackerComponent } from '@shared/ui/step-tracker/step-tracker.component';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-forgot-password-page',
@@ -15,7 +17,8 @@ import { StepTrackerComponent } from '@shared/ui/step-tracker/step-tracker.compo
     ButtonComponent,
     InputFieldComponent,
     OtpInputComponent,
-    StepTrackerComponent
+    StepTrackerComponent,
+    TranslatePipe
   ],
   templateUrl: './forgot-password-page.html',
   styleUrl: './forgot-password-page.css'
@@ -24,6 +27,7 @@ export class ForgotPasswordPageComponent implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
 
   requestForm: FormGroup = this.fb.group({
     phone: ['', [Validators.required]]
@@ -90,7 +94,7 @@ export class ForgotPasswordPageComponent implements OnDestroy {
       error: (err: { error?: { message?: string }; message?: string }) => {
         this.loading.set(false);
         this.errorMessage.set(
-          err?.error?.message || err?.message || 'Failed to send a reset code. Please try again.'
+          err?.error?.message || err?.message || this.i18n.t('auth.sendCodeFailed')
         );
       }
     });
@@ -110,7 +114,7 @@ export class ForgotPasswordPageComponent implements OnDestroy {
       error: (err: { error?: { message?: string }; message?: string }) => {
         this.loading.set(false);
         this.errorMessage.set(
-          err?.error?.message || err?.message || 'Failed to resend the code. Please try again.'
+          err?.error?.message || err?.message || this.i18n.t('auth.resendFailed')
         );
       }
     });
@@ -135,7 +139,7 @@ export class ForgotPasswordPageComponent implements OnDestroy {
       error: (err: { error?: { message?: string }; message?: string }) => {
         this.loading.set(false);
         this.errorMessage.set(
-          err?.error?.message || err?.message || 'Failed to reset password. Please check the code.'
+          err?.error?.message || err?.message || this.i18n.t('auth.resetFailed')
         );
       }
     });

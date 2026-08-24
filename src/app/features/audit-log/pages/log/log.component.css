@@ -139,7 +139,7 @@
 }
 
 .log-table th {
-  text-align: left;
+  text-align: start;
   font-size: 11.5px;
   font-weight: 700;
   color: var(--color-faint, #8a96a1);
@@ -172,7 +172,7 @@
 
 .role-tag {
   display: inline-block;
-  margin-left: 6px;
+  margin-inline-start: 6px;
   font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
@@ -197,7 +197,7 @@
 }
 
 .expand-cell {
-  text-align: right;
+  text-align: end;
   color: var(--color-faint, #8a96a1);
   font-size: 11px;
 }

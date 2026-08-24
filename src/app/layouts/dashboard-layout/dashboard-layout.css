@@ -89,7 +89,7 @@
 }
 
 .nav-soon {
-  margin-left: auto;
+  margin-inline-start: auto;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -239,7 +239,7 @@
 .alert-badge {
   position: absolute;
   top: -4px;
-  right: -4px;
+  inset-inline-end: -4px;
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
@@ -255,7 +255,7 @@
 .alerts-panel {
   position: absolute;
   top: calc(100% + 10px);
-  right: 0;
+  inset-inline-end: 0;
   width: 300px;
   max-height: 340px;
   overflow-y: auto;
@@ -302,7 +302,7 @@
   border: none;
   background: none;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   border-radius: 6px;
 }

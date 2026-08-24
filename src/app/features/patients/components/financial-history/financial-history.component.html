@@ -1,28 +1,28 @@
 <div class="panel">
-  <h2 class="section-title">Financial history</h2>
+  <h2 class="section-title">{{ 'patients.financialHistoryTitle' | t }}</h2>
 
   @if (loading()) {
-    <p class="empty-state">Loading financial history...</p>
+    <p class="empty-state">{{ 'patients.loadingFinancialHistory' | t }}</p>
   } @else if (loadError() || !history()) {
-    <p class="empty-state empty-state-error">Couldn't load financial history.</p>
+    <p class="empty-state empty-state-error">{{ 'patients.loadFinancialHistoryError' | t }}</p>
   } @else {
     @let h = history()!;
 
     @if (h.totalOutstanding > 0) {
-      <p class="outstanding-note">Outstanding balance: {{ formatMoney(h.totalOutstanding) }}</p>
+      <p class="outstanding-note">{{ 'patients.outstandingBalance' | t: { amount: formatMoney(h.totalOutstanding) } }}</p>
     }
 
     @if (h.invoices.length === 0) {
-      <p class="empty-state">No invoices yet.</p>
+      <p class="empty-state">{{ 'patients.noInvoicesYet' | t }}</p>
     } @else {
       <table class="history-table">
         <thead>
           <tr>
-            <th>Invoice #</th>
-            <th>Issued</th>
-            <th>Total</th>
-            <th>Paid</th>
-            <th>Status</th>
+            <th>{{ 'billing.invoiceNumber' | t }}</th>
+            <th>{{ 'billing.issued' | t }}</th>
+            <th>{{ 'common.total' | t }}</th>
+            <th>{{ 'status.paid' | t }}</th>
+            <th>{{ 'common.status' | t }}</th>
           </tr>
         </thead>
         <tbody>
@@ -39,7 +39,7 @@
               <td>
                 <app-status-pill
                   [tone]="invoiceStatusInfo(invoice.status).tone"
-                  [label]="invoiceStatusInfo(invoice.status).label"
+                  [label]="invoiceStatusInfo(invoice.status).label | t"
                 />
               </td>
             </tr>
@@ -48,7 +48,7 @@
       </table>
 
       @if (h.paymentTimeline.length > 0) {
-        <h3 class="subsection-title">Payment timeline</h3>
+        <h3 class="subsection-title">{{ 'patients.paymentTimeline' | t }}</h3>
         <ul class="payment-list">
           @for (payment of h.paymentTimeline; track $index) {
             <li class="payment-row" [class.payment-row-refund]="payment.isRefund">

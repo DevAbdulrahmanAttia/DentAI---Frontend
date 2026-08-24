@@ -4,16 +4,19 @@ import { PatientFinancialHistory } from '@core/models/billing.model';
 import { BillingService } from '@features/billing/services/billing.service';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
 import { invoiceStatusInfo } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-financial-history',
   standalone: true,
-  imports: [RouterLink, StatusPillComponent],
+  imports: [RouterLink, StatusPillComponent, TranslatePipe],
   templateUrl: './financial-history.component.html',
   styleUrl: './financial-history.component.css'
 })
 export class FinancialHistoryComponent implements OnInit {
   private readonly billingService = inject(BillingService);
+  protected readonly i18n = inject(I18nService);
 
   patientId = input.required<string>();
 
@@ -37,10 +40,10 @@ export class FinancialHistoryComponent implements OnInit {
   }
 
   formatMoney(value: number): string {
-    return `EGP ${value.toFixed(0)}`;
+    return `${this.i18n.t('common.egp')} ${value.toFixed(0)}`;
   }
 
   formatDate(iso: string): string {
-    return new Date(iso).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+    return new Date(iso).toLocaleDateString(this.i18n.intlLocale(), { year: 'numeric', month: 'short', day: 'numeric' });
   }
 }

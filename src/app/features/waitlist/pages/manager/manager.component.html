@@ -1,19 +1,19 @@
 <div class="page">
   <div class="page-header">
     <div>
-      <h1>Waitlist</h1>
-      <p class="subtitle">Patients waiting for an earlier or newly freed slot.</p>
+      <h1>{{ 'dashboard.waitlist' | t }}</h1>
+      <p class="subtitle">{{ 'waitlist.subtitle' | t }}</p>
     </div>
     @if (authService.hasRole(['receptionist', 'owner'])) {
       <button type="button" class="action-btn action-btn-primary" (click)="toggleAddForm()">
-        {{ showAddForm() ? 'Cancel' : '+ Add to waitlist' }}
+        {{ showAddForm() ? ('common.cancel' | t) : ('waitlist.addToWaitlist' | t) }}
       </button>
     }
   </div>
 
   @if (showAddForm()) {
     <section class="panel add-panel">
-      <h2>Add to waitlist</h2>
+      <h2>{{ 'waitlist.addToWaitlistTitle' | t }}</h2>
 
       @if (selectedPatient(); as patient) {
         <div class="selected-patient">
@@ -21,18 +21,18 @@
             <span class="selected-patient-name">{{ patient.name }}</span>
             <span class="selected-patient-phone">{{ patient.phone }}</span>
           </div>
-          <button type="button" class="link-btn" (click)="clearSelectedPatient()">Change</button>
+          <button type="button" class="link-btn" (click)="clearSelectedPatient()">{{ 'appointments.change' | t }}</button>
         </div>
       } @else {
         <div class="patient-search">
           <input
             type="text"
             class="search-input"
-            placeholder="Search by name or phone..."
+            [placeholder]="'appointments.searchByNameOrPhone' | t"
             [formControl]="searchControl"
           />
           @if (searching()) {
-            <p class="hint">Searching...</p>
+            <p class="hint">{{ 'appointments.searching' | t }}</p>
           } @else if (searchResults().length > 0) {
             <ul class="search-results">
               @for (patient of searchResults(); track patient.id) {
@@ -51,19 +51,19 @@
       <form [formGroup]="addForm" (ngSubmit)="submitAdd()" class="add-form">
         <div class="accept-row">
           <div class="field">
-            <label for="preferredDateFrom">From date</label>
+            <label for="preferredDateFrom">{{ 'waitlist.fromDate' | t }}</label>
             <input id="preferredDateFrom" type="date" formControlName="preferredDateFrom" class="native-input" />
           </div>
           <div class="field">
-            <label for="preferredDateTo">To date (optional)</label>
+            <label for="preferredDateTo">{{ 'waitlist.toDateOptional' | t }}</label>
             <input id="preferredDateTo" type="date" formControlName="preferredDateTo" class="native-input" />
           </div>
           <div class="field">
-            <label for="preferredTimeStart">Earliest time (optional)</label>
+            <label for="preferredTimeStart">{{ 'waitlist.earliestTimeOptional' | t }}</label>
             <input id="preferredTimeStart" type="time" formControlName="preferredTimeStart" class="native-input" />
           </div>
           <div class="field">
-            <label for="preferredTimeEnd">Latest time (optional)</label>
+            <label for="preferredTimeEnd">{{ 'waitlist.latestTimeOptional' | t }}</label>
             <input id="preferredTimeEnd" type="time" formControlName="preferredTimeEnd" class="native-input" />
           </div>
         </div>
@@ -73,7 +73,7 @@
         }
 
         <button type="submit" class="submit-btn" [disabled]="!selectedPatient() || adding()">
-          {{ adding() ? 'Adding...' : 'Add to waitlist' }}
+          {{ adding() ? ('waitlist.adding' | t) : ('waitlist.addToWaitlist' | t) }}
         </button>
       </form>
     </section>
@@ -87,18 +87,18 @@
         [class.filter-chip-active]="activeFilter() === filter.value"
         (click)="setFilter(filter.value)"
       >
-        {{ filter.label }}
+        {{ filter.labelKey | t }}
       </button>
     }
   </div>
 
   <div class="panel">
     @if (loading()) {
-      <p class="empty-state">Loading waitlist...</p>
+      <p class="empty-state">{{ 'waitlist.loading' | t }}</p>
     } @else if (loadError()) {
-      <p class="empty-state empty-state-error">Couldn't load the waitlist.</p>
+      <p class="empty-state empty-state-error">{{ 'waitlist.loadError' | t }}</p>
     } @else if (entries().length === 0) {
-      <p class="empty-state">No entries here.</p>
+      <p class="empty-state">{{ 'waitlist.noEntries' | t }}</p>
     } @else {
       <ul class="entry-list">
         @for (entry of entries(); track entry.id) {
@@ -107,7 +107,7 @@
               <div class="entry-meta">
                 <span class="entry-name">{{ entry.patient.name }}</span>
                 <span class="entry-date">
-                  Prefers {{ formatDate(entry.preferredDateFrom) }}
+                  {{ 'waitlist.prefers' | t: { date: formatDate(entry.preferredDateFrom) } }}
                   @if (entry.preferredDateTo) {
                     – {{ formatDate(entry.preferredDateTo) }}
                   }
@@ -119,16 +119,16 @@
               <div class="entry-actions">
                 <app-status-pill
                   [tone]="waitlistPriorityInfo(entry.patient.noShowRiskScore).tone"
-                  [label]="waitlistPriorityInfo(entry.patient.noShowRiskScore).label"
+                  [label]="waitlistPriorityInfo(entry.patient.noShowRiskScore).label | t"
                 />
                 <app-status-pill
                   [tone]="waitlistStatusInfo(entry.status).tone"
-                  [label]="waitlistStatusInfo(entry.status).label"
+                  [label]="waitlistStatusInfo(entry.status).label | t"
                 />
                 @if (authService.hasRole(['receptionist', 'owner'])) {
                   @if (entry.status === 'offered' && acceptingEntryId() !== entry.id) {
                     <button type="button" class="action-btn action-btn-accept" (click)="startAccept(entry)">
-                      Accept
+                      {{ 'waitlist.accept' | t }}
                     </button>
                   }
                   <select
@@ -136,10 +136,10 @@
                     [value]="entry.status"
                     (change)="changeStatus(entry, $any($event.target).value)"
                   >
-                    <option value="waiting">Waiting</option>
-                    <option value="offered">Offered</option>
-                    <option value="filled">Filled</option>
-                    <option value="expired">Expired</option>
+                    <option value="waiting">{{ 'status.waiting' | t }}</option>
+                    <option value="offered">{{ 'status.offered' | t }}</option>
+                    <option value="filled">{{ 'status.filled' | t }}</option>
+                    <option value="expired">{{ 'status.expired' | t }}</option>
                   </select>
                   <button
                     type="button"
@@ -147,7 +147,7 @@
                     [disabled]="removingEntryId() === entry.id"
                     (click)="removeEntry(entry)"
                   >
-                    {{ removingEntryId() === entry.id ? 'Removing...' : 'Delete' }}
+                    {{ removingEntryId() === entry.id ? ('waitlist.removing' | t) : ('common.delete' | t) }}
                   </button>
                 }
               </div>
@@ -157,13 +157,13 @@
               <form class="accept-form" [formGroup]="acceptForm" (ngSubmit)="submitAccept(entry)">
                 <div class="accept-row">
                   <select formControlName="doctorId" class="native-select">
-                    <option value="" disabled>Doctor</option>
+                    <option value="" disabled>{{ 'waitlist.doctorPlaceholder' | t }}</option>
                     @for (doctor of doctors(); track doctor.id) {
                       <option [value]="doctor.id">{{ doctor.name }}</option>
                     }
                   </select>
                   <select formControlName="procedureTypeId" class="native-select">
-                    <option value="" disabled>Procedure</option>
+                    <option value="" disabled>{{ 'waitlist.procedurePlaceholder' | t }}</option>
                     @for (procedure of procedures(); track procedure.id) {
                       <option [value]="procedure.id">{{ procedure.name }}</option>
                     }
@@ -178,9 +178,9 @@
 
                 <div class="accept-actions">
                   <button type="submit" class="submit-btn submit-btn-sm" [disabled]="accepting()">
-                    {{ accepting() ? 'Booking...' : 'Confirm slot' }}
+                    {{ accepting() ? ('waitlist.booking' | t) : ('waitlist.confirmSlot' | t) }}
                   </button>
-                  <button type="button" class="link-btn" (click)="cancelAccept()">Cancel</button>
+                  <button type="button" class="link-btn" (click)="cancelAccept()">{{ 'common.cancel' | t }}</button>
                 </div>
               </form>
             }

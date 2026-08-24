@@ -1,41 +1,41 @@
 <div class="page">
   <div class="page-header">
     <div>
-      <h1>Staff</h1>
-      <p class="subtitle">Manage clinic staff accounts.</p>
+      <h1>{{ 'nav.staff' | t }}</h1>
+      <p class="subtitle">{{ 'staff.subtitle' | t }}</p>
     </div>
     <button type="button" class="action-btn action-btn-primary" (click)="toggleAddForm()">
-      {{ showAddForm() ? 'Cancel' : '+ Add staff' }}
+      {{ showAddForm() ? ('common.cancel' | t) : ('staff.addStaff' | t) }}
     </button>
   </div>
 
   @if (showAddForm()) {
     <section class="panel add-panel">
-      <h2>Add staff account</h2>
+      <h2>{{ 'staff.addStaffTitle' | t }}</h2>
       <form [formGroup]="addForm" (ngSubmit)="submitAdd()" class="add-form">
         <div class="field">
-          <label for="name">Full name</label>
+          <label for="name">{{ 'staff.fullName' | t }}</label>
           <input id="name" type="text" formControlName="name" class="native-input" />
         </div>
         <div class="field">
-          <label for="email">Email</label>
-          <input id="email" type="email" formControlName="email" class="native-input" />
+          <label for="email">{{ 'common.email' | t }}</label>
+          <input id="email" type="email" dir="ltr" formControlName="email" class="native-input" />
         </div>
         <div class="field">
-          <label for="password">Password</label>
-          <input id="password" type="password" formControlName="password" class="native-input" placeholder="Min. 8 characters" />
+          <label for="password">{{ 'auth.passwordLabel' | t }}</label>
+          <input id="password" type="password" formControlName="password" class="native-input" [placeholder]="'staff.passwordMinChars' | t" />
         </div>
         <div class="field">
-          <label for="role">Role</label>
+          <label for="role">{{ 'staff.role' | t }}</label>
           <select id="role" formControlName="role" class="native-select">
-            <option value="receptionist">Receptionist</option>
-            <option value="doctor">Doctor</option>
-            <option value="owner">Owner</option>
+            <option value="receptionist">{{ 'role.receptionist' | t }}</option>
+            <option value="doctor">{{ 'role.doctor' | t }}</option>
+            <option value="owner">{{ 'role.owner' | t }}</option>
           </select>
         </div>
         <div class="field">
-          <label for="phone">Phone (optional)</label>
-          <input id="phone" type="text" formControlName="phone" class="native-input" placeholder="e.g. +201000000000" />
+          <label for="phone">{{ 'staff.phoneOptional' | t }}</label>
+          <input id="phone" type="text" dir="ltr" formControlName="phone" class="native-input" placeholder="e.g. +201000000000" />
         </div>
 
         @if (selectedRole() === 'owner') {
@@ -43,9 +43,9 @@
             <label class="checkbox-row">
               <input type="checkbox" formControlName="isClinician" class="checkbox-input" />
               <span>
-                <span class="checkbox-label">Also treats patients</span>
+                <span class="checkbox-label">{{ 'staff.alsoTreatsPatients' | t }}</span>
                 <span class="checkbox-hint">
-                  Gives this owner a doctor's schedule and makes them bookable, without a second account.
+                  {{ 'staff.alsoTreatsPatientsHint' | t }}
                 </span>
               </span>
             </label>
@@ -57,7 +57,7 @@
         }
 
         <button type="submit" class="submit-btn" [disabled]="adding()">
-          {{ adding() ? 'Creating...' : 'Create account' }}
+          {{ adding() ? ('staff.creating' | t) : ('staff.createAccount' | t) }}
         </button>
       </form>
     </section>
@@ -65,22 +65,23 @@
 
   <div class="panel">
     @if (loading()) {
-      <p class="empty-state">Loading staff...</p>
+      <p class="empty-state">{{ 'staff.loading' | t }}</p>
     } @else if (loadError()) {
-      <p class="empty-state empty-state-error">Couldn't load staff.</p>
+      <p class="empty-state empty-state-error">{{ 'staff.loadError' | t }}</p>
     } @else if (staff().length === 0) {
-      <p class="empty-state">No staff accounts yet.</p>
+      <p class="empty-state">{{ 'staff.noStaffYet' | t }}</p>
     } @else {
       <div class="table-wrap">
         <table class="staff-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Treats patients</th>
-              <th>Phone</th>
-              <th>Status</th>
+              <th>{{ 'common.name' | t }}</th>
+              <th>{{ 'common.email' | t }}</th>
+              <th>{{ 'staff.role' | t }}</th>
+              <th>{{ 'staff.treatsPatients' | t }}</th>
+              <th>{{ 'staff.consultationFee' | t }}</th>
+              <th>{{ 'common.phone' | t }}</th>
+              <th>{{ 'common.status' | t }}</th>
               <th></th>
             </tr>
           </thead>
@@ -89,7 +90,7 @@
               <tr>
                 <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
-                <td class="role-cell">{{ user.role }}</td>
+                <td class="role-cell">{{ ('role.' + user.role) | t }}</td>
                 <td>
                   @if (canToggleClinician(user)) {
                     <button
@@ -98,22 +99,62 @@
                       [disabled]="updatingId() === user.id"
                       (click)="toggleClinician(user)"
                     >
-                      {{ treatsPatients(user) ? 'Yes — turn off' : 'No — turn on' }}
+                      {{ treatsPatients(user) ? ('staff.yesTurnOff' | t) : ('staff.noTurnOn' | t) }}
                     </button>
                   } @else {
-                    <span class="muted-cell">{{ treatsPatients(user) ? 'Yes' : 'No' }}</span>
+                    <span class="muted-cell">{{ treatsPatients(user) ? ('staff.yes' | t) : ('staff.no' | t) }}</span>
+                  }
+                </td>
+                <!--
+                  Only meaningful for someone who treats patients — a
+                  receptionist has no examination fee to charge.
+                -->
+                <td class="fee-cell">
+                  @if (!treatsPatients(user)) {
+                    <span class="muted-cell">—</span>
+                  } @else if (editingFeeId() === user.id) {
+                    <div class="fee-edit">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        class="fee-input"
+                        [placeholder]="'staff.clinicDefault' | t"
+                        [value]="feeDraft() ?? ''"
+                        (input)="onFeeInput($any($event.target).value)"
+                      />
+                      <button
+                        type="button"
+                        class="toggle-btn"
+                        [disabled]="updatingId() === user.id"
+                        (click)="saveFee(user)"
+                      >
+                        {{ updatingId() === user.id ? ('staff.saving' | t) : ('common.save' | t) }}
+                      </button>
+                      <button type="button" class="link-btn" (click)="cancelEditingFee()">
+                        {{ 'common.cancel' | t }}
+                      </button>
+                    </div>
+                  } @else {
+                    <button type="button" class="fee-value" (click)="startEditingFee(user)">
+                      @if (user.consultationFee != null) {
+                        {{ 'common.egp' | t }} {{ user.consultationFee }}
+                      } @else {
+                        <span class="muted-cell">{{ 'staff.clinicDefault' | t }}</span>
+                      }
+                    </button>
                   }
                 </td>
                 <td>{{ user.phone || '—' }}</td>
                 <td>
                   <app-status-pill
                     [tone]="user.isActive ? 'green' : 'grey'"
-                    [label]="user.isActive ? 'Active' : 'Inactive'"
+                    [label]="(user.isActive ? 'status.active' : 'status.inactive') | t"
                   />
                 </td>
                 <td class="actions-cell">
                   @if (isSelf(user)) {
-                    <span class="self-note">You</span>
+                    <span class="self-note">{{ 'staff.you' | t }}</span>
                   } @else {
                     <button
                       type="button"
@@ -121,7 +162,7 @@
                       [disabled]="updatingId() === user.id"
                       (click)="toggleActive(user)"
                     >
-                      {{ user.isActive ? 'Deactivate' : 'Reactivate' }}
+                      {{ user.isActive ? ('staff.deactivate' | t) : ('staff.reactivate' | t) }}
                     </button>
                   }
                 </td>

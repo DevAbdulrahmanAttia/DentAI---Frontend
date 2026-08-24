@@ -6,6 +6,26 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="favicon.png">
+  <script>
+    // Stamp lang/dir before first paint so an Arabic-preferring visitor never
+    // sees an LTR flash while Angular boots and I18nService takes over. Kept
+    // in sync by hand with StorageService's key ('lang') and I18nService's
+    // fallback order (stored choice, then browser language, then English).
+    (function () {
+      try {
+        var stored = localStorage.getItem('lang');
+        var lang = stored ? JSON.parse(stored) : null;
+        if (lang !== 'ar' && lang !== 'en') {
+          lang = (navigator.language || '').toLowerCase().indexOf('ar') === 0 ? 'ar' : 'en';
+        }
+        document.documentElement.setAttribute('lang', lang);
+        document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+      } catch (e) {
+        // localStorage may be unavailable (privacy mode); default LTR/English
+        // is already what the static markup declares, so nothing to do.
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

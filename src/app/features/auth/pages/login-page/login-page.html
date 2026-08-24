@@ -5,21 +5,21 @@
     </div>
 
     <div>
-      <h2 class="tagline">Smarter care. <span class="tagline-accent">Better outcomes.</span></h2>
-      <p class="quote"><b>All-in-one platform</b> for your dental clinic.</p>
+      <h2 class="tagline">{{ 'auth.tagline' | t }} <span class="tagline-accent">{{ 'auth.taglineAccent' | t }}</span></h2>
+      <p class="quote"><b>{{ 'auth.quoteStrong' | t }}</b> {{ 'auth.quoteRest' | t }}</p>
       <div class="stats">
-        <div><div class="num">−31%</div><div class="lbl">no-show rate</div></div>
-        <div><div class="num">3.2×</div><div class="lbl">slots recovered</div></div>
-        <div><div class="num">99.9%</div><div class="lbl">uptime SLA</div></div>
+        <div><div class="num">−31%</div><div class="lbl">{{ 'auth.statNoShow' | t }}</div></div>
+        <div><div class="num">3.2×</div><div class="lbl">{{ 'auth.statSlots' | t }}</div></div>
+        <div><div class="num">99.9%</div><div class="lbl">{{ 'auth.statUptime' | t }}</div></div>
       </div>
     </div>
   </div>
 
   <div class="login-form-side">
     <div class="login-card">
-      <div class="eyebrow">Clinic sign in</div>
-      <h1>Welcome back</h1>
-      <div class="sub">Sign in to manage your clinic's schedule, patients, and inventory.</div>
+      <div class="eyebrow">{{ 'auth.eyebrow' | t }}</div>
+      <h1>{{ 'auth.welcomeBack' | t }}</h1>
+      <div class="sub">{{ 'auth.signInSub' | t }}</div>
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         @if (errorMessage()) {
@@ -30,35 +30,35 @@
 
         <app-input-field
           formControlName="email"
-          label="Email address"
+          [label]="'auth.emailLabel' | t"
           type="email"
           placeholder="you@clinic.com"
           [hasError]="!!(loginForm.get('email')?.touched && loginForm.get('email')?.invalid)"
-          [errorMessage]="loginForm.get('email')?.hasError('required') ? 'Email is required' : loginForm.get('email')?.hasError('email') ? 'Please enter a valid email' : ''"
+          [errorMessage]="loginForm.get('email')?.hasError('required') ? ('auth.emailRequired' | t) : loginForm.get('email')?.hasError('email') ? ('auth.emailInvalid' | t) : ''"
         />
 
         <app-input-field
           formControlName="password"
-          label="Password"
+          [label]="'auth.passwordLabel' | t"
           type="password"
           placeholder="••••••••"
           [hasError]="!!(loginForm.get('password')?.touched && loginForm.get('password')?.invalid)"
-          [errorMessage]="loginForm.get('password')?.hasError('required') ? 'Password is required' : ''"
+          [errorMessage]="loginForm.get('password')?.hasError('required') ? ('auth.passwordRequired' | t) : ''"
         />
 
         <div class="row-between">
           <label class="checkbox-line">
-            <input type="checkbox" formControlName="rememberMe"> Keep me signed in
+            <input type="checkbox" formControlName="rememberMe"> {{ 'auth.keepSignedIn' | t }}
           </label>
-          <a class="link" routerLink="/auth/forgot">Forgot password?</a>
+          <a class="link" routerLink="/auth/forgot">{{ 'auth.forgotPassword' | t }}</a>
         </div>
 
         <app-button type="submit" variant="primary" [loading]="loading()">
-          Sign in
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          {{ 'auth.signIn' | t }}
+          <svg class="rtl-mirror" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </app-button>
       </form>
-      <div class="divider-note">Need an account? Ask your clinic owner to invite you.</div>
+      <div class="divider-note">{{ 'auth.needAccount' | t }}</div>
     </div>
   </div>
 </div>

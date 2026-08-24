@@ -2,17 +2,21 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { WaitlistOfferPreview } from '@core/models/waitlist.model';
 import { WaitlistService } from '@features/waitlist/services/waitlist.service';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 type ViewState = 'loading' | 'preview' | 'confirming' | 'confirmed' | 'invalid';
 
 @Component({
   selector: 'app-waitlist-confirm',
   standalone: true,
+  imports: [TranslatePipe],
   templateUrl: './confirm.component.html',
   styleUrl: './confirm.component.css'
 })
 export class ConfirmComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  protected readonly i18n = inject(I18nService);
   private readonly waitlistService = inject(WaitlistService);
 
   protected readonly state = signal<ViewState>('loading');
@@ -28,7 +32,7 @@ export class ConfirmComponent implements OnInit {
 
     if (!this.id || !this.token) {
       this.state.set('invalid');
-      this.errorMessage.set('This link is missing information and cannot be used.');
+      this.errorMessage.set(this.i18n.t('waitlist.linkMissingInfo'));
       return;
     }
 
@@ -40,7 +44,7 @@ export class ConfirmComponent implements OnInit {
       error: (err) => {
         this.state.set('invalid');
         this.errorMessage.set(
-          err?.error?.message || 'This offer is no longer valid. It may have expired or already been used.'
+          err?.error?.message || this.i18n.t('waitlist.offerNoLongerValid')
         );
       }
     });
@@ -55,14 +59,14 @@ export class ConfirmComponent implements OnInit {
       error: (err) => {
         this.state.set('invalid');
         this.errorMessage.set(
-          err?.error?.message || 'This offer could not be confirmed. It may have expired or already been used.'
+          err?.error?.message || this.i18n.t('waitlist.offerConfirmFailed')
         );
       }
     });
   }
 
   formatScheduledAt(iso: string): string {
-    return new Date(iso).toLocaleString([], {
+    return new Date(iso).toLocaleString(this.i18n.intlLocale(), {
       weekday: 'long',
       month: 'long',
       day: 'numeric',

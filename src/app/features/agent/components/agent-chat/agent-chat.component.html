@@ -3,7 +3,7 @@
   class="launcher"
   [class.launcher-open]="panelOpen()"
   (click)="togglePanel()"
-  aria-label="Clinic assistant"
+  [attr.aria-label]="'agent.launcherLabel' | t"
 >
   @if (panelOpen()) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -20,11 +20,11 @@
           <img src="assets/chatbot-icon.png" alt="" />
         </span>
         <div>
-          <h2>Clinic Assistant</h2>
-          <span class="panel-subtitle">Book, waitlist &amp; message</span>
+          <h2>{{ 'agent.title' | t }}</h2>
+          <span class="panel-subtitle">{{ 'agent.subtitle' | t }}</span>
         </div>
       </div>
-      <button type="button" class="close-btn" (click)="closePanel()" aria-label="Close">
+      <button type="button" class="close-btn" (click)="closePanel()" [attr.aria-label]="'agent.close' | t">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -48,39 +48,39 @@
             <div class="analytics-card">
               <div class="analytics-card-head">
                 <span class="analytics-card-title">{{ entry.message }}</span>
-                <a routerLink="/dashboard/analytics" (click)="closePanel()" class="analytics-card-link">Full dashboard</a>
+                <a routerLink="/dashboard/analytics" (click)="closePanel()" class="analytics-card-link">{{ 'agent.fullDashboard' | t }}</a>
               </div>
 
               <div class="analytics-kpi-grid">
                 <div class="analytics-kpi">
-                  <span class="analytics-kpi-label">Revenue</span>
-                  <span class="analytics-kpi-value">EGP {{ entry.data.kpis.revenue }}</span>
+                  <span class="analytics-kpi-label">{{ 'agent.revenue' | t }}</span>
+                  <span class="analytics-kpi-value">{{ 'common.egp' | t }} {{ entry.data.kpis.revenue }}</span>
                 </div>
                 <div class="analytics-kpi">
-                  <span class="analytics-kpi-label">Completed</span>
+                  <span class="analytics-kpi-label">{{ 'agent.completed' | t }}</span>
                   <span class="analytics-kpi-value">{{ entry.data.kpis.doneCount }}</span>
                 </div>
                 <div class="analytics-kpi">
-                  <span class="analytics-kpi-label">No-show rate</span>
+                  <span class="analytics-kpi-label">{{ 'agent.noShowRate' | t }}</span>
                   <span class="analytics-kpi-value">{{ entry.data.kpis.noShowRate }}%</span>
                 </div>
                 <div class="analytics-kpi">
-                  <span class="analytics-kpi-label">Avg/day</span>
+                  <span class="analytics-kpi-label">{{ 'agent.avgPerDay' | t }}</span>
                   <span class="analytics-kpi-value">{{ entry.data.kpis.avgAppointmentsPerDay }}</span>
                 </div>
                 <div class="analytics-kpi">
-                  <span class="analytics-kpi-label">Waitlist fill</span>
+                  <span class="analytics-kpi-label">{{ 'agent.waitlistFill' | t }}</span>
                   <span class="analytics-kpi-value">{{ entry.data.kpis.slotRecovery.fillRate }}%</span>
                 </div>
                 <div class="analytics-kpi" [class.analytics-kpi-warn]="entry.data.kpis.activeAlertsCount > 0">
-                  <span class="analytics-kpi-label">Active alerts</span>
+                  <span class="analytics-kpi-label">{{ 'agent.activeAlerts' | t }}</span>
                   <span class="analytics-kpi-value">{{ entry.data.kpis.activeAlertsCount }}</span>
                 </div>
               </div>
 
               @if (entry.data.revenueTrend.length > 0) {
                 <div class="analytics-section">
-                  <span class="analytics-section-title">Revenue trend</span>
+                  <span class="analytics-section-title">{{ 'agent.revenueTrend' | t }}</span>
                   <div class="analytics-bar-chart">
                     @for (point of entry.data.revenueTrend; track point.period) {
                       <div class="analytics-bar-col">
@@ -99,12 +99,12 @@
 
               @if (entry.data.topProcedures.length > 0) {
                 <div class="analytics-section">
-                  <span class="analytics-section-title">Top procedures</span>
+                  <span class="analytics-section-title">{{ 'agent.topProcedures' | t }}</span>
                   <ul class="analytics-proc-list">
                     @for (proc of entry.data.topProcedures; track proc.procedureTypeId) {
                       <li class="analytics-proc-row">
                         <span class="analytics-proc-name">{{ proc.name }}</span>
-                        <span class="analytics-proc-figures">EGP {{ proc.revenue }} &middot; {{ proc.marginPercent }}% margin</span>
+                        <span class="analytics-proc-figures">{{ 'common.egp' | t }} {{ proc.revenue }} &middot; {{ 'agent.marginPercent' | t: { percent: proc.marginPercent } }}</span>
                       </li>
                     }
                   </ul>
@@ -113,11 +113,11 @@
 
               @if (entry.data.alerts.length > 0) {
                 <div class="analytics-section">
-                  <span class="analytics-section-title">Alerts</span>
+                  <span class="analytics-section-title">{{ 'agent.alerts' | t }}</span>
                   <ul class="analytics-alert-list">
                     @for (alert of entry.data.alerts; track alert.itemId + alert.type) {
                       <li class="analytics-alert-row">
-                        <app-status-pill [tone]="alertTone(alert.type)" [label]="alertLabel(alert.type)" />
+                        <app-status-pill [tone]="alertTone(alert.type)" [label]="alertLabel(alert.type) | t" />
                         <span class="analytics-alert-name">{{ alert.itemName }}</span>
                       </li>
                     }
@@ -126,10 +126,39 @@
               }
             </div>
           </div>
+        } @else if (isDraft(entry)) {
+          <div class="bubble-row bubble-row-agent">
+            <div class="draft-card">
+              <div class="draft-card-head">
+                <span class="draft-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </span>
+                <span class="draft-card-title">{{ 'agent.draft.title' | t }}</span>
+              </div>
+              <p class="draft-question">{{ entry.question }}</p>
+
+              @if (entry.text) {
+                <p class="draft-text">{{ entry.text }}</p>
+                <div class="draft-footer">
+                  <p class="draft-note">{{ 'agent.draft.reviewNote' | t }}</p>
+                  <button type="button" class="draft-copy-btn" [class.draft-copy-btn-done]="entry.copied" (click)="copyDraft(entry)">
+                    @if (entry.copied) {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    } @else {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    }
+                    {{ entry.copied ? ('agent.draft.copied' | t) : ('agent.draft.copy' | t) }}
+                  </button>
+                </div>
+              } @else {
+                <p class="draft-note draft-note-empty">{{ 'agent.draft.unavailable' | t }}</p>
+              }
+            </div>
+          </div>
         } @else if (entry.kind === 'agent-unavailable') {
-          <div class="system-note">The assistant isn't available right now — try again later.</div>
+          <div class="system-note">{{ 'agent.unavailable' | t }}</div>
         } @else if (entry.kind === 'agent-error') {
-          <div class="system-note system-note-error">Something went wrong. Please try again.</div>
+          <div class="system-note system-note-error">{{ 'agent.genericError' | t }}</div>
         } @else if (isAction(entry)) {
           <div class="bubble-row bubble-row-agent">
             <div class="action-card" [class.action-card-done]="entry.status === 'confirmed'" [class.action-card-cancelled]="entry.status === 'cancelled'" [class.action-card-error]="entry.status === 'error'">
@@ -171,27 +200,30 @@
                     }
                   }
                 </span>
-                <span class="action-tool-label">{{ toolLabels[entry.tool] }}</span>
+                <span class="action-tool-label">{{ toolLabels[entry.tool] | t }}</span>
               </div>
               <p class="action-summary">{{ entry.summary }}</p>
+              @if (pendingDraftText(entry); as draftText) {
+                <p class="action-draft-preview">{{ draftText }}</p>
+              }
 
               @if (entry.status === 'pending' || entry.status === 'confirming') {
                 <div class="action-actions">
-                  <button type="button" class="action-btn action-btn-cancel" [disabled]="entry.status === 'confirming'" (click)="cancelAction(entry)">Cancel</button>
+                  <button type="button" class="action-btn action-btn-cancel" [disabled]="entry.status === 'confirming'" (click)="cancelAction(entry)">{{ 'agent.cancel' | t }}</button>
                   <button type="button" class="action-btn action-btn-confirm" [disabled]="entry.status === 'confirming'" (click)="confirmAction(entry)">
-                    {{ entry.status === 'confirming' ? 'Confirming...' : 'Confirm' }}
+                    {{ entry.status === 'confirming' ? ('agent.confirming' | t) : ('agent.confirm' | t) }}
                   </button>
                 </div>
               } @else if (entry.status === 'confirmed') {
-                <p class="action-status action-status-done">Done.</p>
+                <p class="action-status action-status-done">{{ 'agent.done' | t }}</p>
                 @if (getTempPassword(entry); as tempPassword) {
                   <div class="temp-password-box">
-                    <p class="temp-password-label">Temporary password — share it now, it won't be shown again:</p>
+                    <p class="temp-password-label">{{ 'agent.tempPasswordLabel' | t }}</p>
                     <code class="temp-password-value">{{ tempPassword }}</code>
                   </div>
                 }
               } @else if (entry.status === 'cancelled') {
-                <p class="action-status action-status-cancelled">Cancelled.</p>
+                <p class="action-status action-status-cancelled">{{ 'agent.cancelled' | t }}</p>
               } @else if (entry.status === 'error') {
                 <p class="action-status action-status-error">{{ entry.errorMessage }}</p>
               }
@@ -216,14 +248,14 @@
     <form class="panel-input" (ngSubmit)="send()">
       <input
         type="text"
-        placeholder="Ask the assistant..."
+        [placeholder]="'agent.inputPlaceholder' | t"
         [ngModel]="draft()"
         (ngModelChange)="draft.set($event)"
         name="draft"
         autocomplete="off"
       />
-      <button type="submit" class="send-btn" [disabled]="sending() || !draft().trim()" aria-label="Send">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      <button type="submit" class="send-btn" [disabled]="sending() || !draft().trim()" [attr.aria-label]="'agent.send' | t">
+        <svg class="rtl-mirror" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>
     </form>
   </div>

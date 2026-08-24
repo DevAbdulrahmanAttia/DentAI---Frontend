@@ -9,6 +9,8 @@ import { AppointmentDetailsPanelComponent } from '@features/appointments/compone
 import { ModalComponent } from '@shared/ui/modal/modal.component';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
 import { appointmentStatusInfo, riskLevelInfo } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 type ViewMode = 'day' | 'week' | 'month';
 type RiskFilter = 'all' | RiskLevel;
@@ -21,12 +23,13 @@ interface MonthCell {
 @Component({
   selector: 'app-appointments-calendar',
   standalone: true,
-  imports: [BookAppointmentFormComponent, AppointmentDetailsPanelComponent, ModalComponent, StatusPillComponent],
+  imports: [BookAppointmentFormComponent, AppointmentDetailsPanelComponent, ModalComponent, StatusPillComponent, TranslatePipe],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css'
 })
 export class CalendarComponent implements OnInit {
   private readonly appointmentsService = inject(AppointmentsService);
+  protected readonly i18n = inject(I18nService);
   private readonly usersService = inject(UsersService);
   protected readonly authService = inject(AuthService);
 
@@ -50,15 +53,15 @@ export class CalendarComponent implements OnInit {
     const date = this.selectedDate();
 
     if (mode === 'day') {
-      return date.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+      return date.toLocaleDateString(this.i18n.intlLocale(), { weekday: 'long', month: 'long', day: 'numeric' });
     }
     if (mode === 'week') {
       const days = this.weekDays();
-      const startLabel = days[0].toLocaleDateString([], { month: 'short', day: 'numeric' });
-      const endLabel = days[6].toLocaleDateString([], { month: 'short', day: 'numeric' });
+      const startLabel = days[0].toLocaleDateString(this.i18n.intlLocale(), { month: 'short', day: 'numeric' });
+      const endLabel = days[6].toLocaleDateString(this.i18n.intlLocale(), { month: 'short', day: 'numeric' });
       return `${startLabel} – ${endLabel}`;
     }
-    return date.toLocaleDateString([], { month: 'long', year: 'numeric' });
+    return date.toLocaleDateString(this.i18n.intlLocale(), { month: 'long', year: 'numeric' });
   });
 
   protected readonly visibleAppointments = computed(() => {
@@ -88,6 +91,14 @@ export class CalendarComponent implements OnInit {
   protected readonly weekDays = computed(() => {
     const start = this.startOfWeek(this.selectedDate());
     return Array.from({ length: 7 }, (_, i) => this.addDays(start, i));
+  });
+
+  /** Short weekday headers for the month grid, localized instead of a hardcoded English Sun–Sat list. */
+  protected readonly weekdayLabels = computed(() => {
+    const start = this.startOfWeek(new Date());
+    return Array.from({ length: 7 }, (_, i) =>
+      this.addDays(start, i).toLocaleDateString(this.i18n.intlLocale(), { weekday: 'short' })
+    );
   });
 
   protected readonly monthGrid = computed<MonthCell[]>(() => {
@@ -166,7 +177,7 @@ export class CalendarComponent implements OnInit {
   }
 
   formatTime(iso: string): string {
-    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleTimeString(this.i18n.intlLocale(), { hour: '2-digit', minute: '2-digit' });
   }
 
   private stepDate(date: Date, direction: 1 | -1): Date {

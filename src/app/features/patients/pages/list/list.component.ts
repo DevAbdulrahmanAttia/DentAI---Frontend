@@ -8,13 +8,14 @@ import { PatientsService } from '@features/patients/services/patients.service';
 import { PatientFormComponent } from '@features/patients/components/patient-form/patient-form.component';
 import { ModalComponent } from '@shared/ui/modal/modal.component';
 import { patientRiskBucket } from '@shared/utils/status-maps';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 type RiskFilter = 'all' | 'low' | 'medium' | 'high';
 
 @Component({
   selector: 'app-patients-list',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, PatientFormComponent, ModalComponent],
+  imports: [ReactiveFormsModule, RouterLink, PatientFormComponent, ModalComponent, TranslatePipe],
   templateUrl: './list.component.html',
   styleUrl: './list.component.css'
 })

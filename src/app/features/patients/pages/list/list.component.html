@@ -1,18 +1,18 @@
 <div class="page">
   <div class="page-header">
     <div>
-      <h1>Patients</h1>
-      <p class="subtitle">Search the patient roster or add a new one.</p>
+      <h1>{{ 'nav.patients' | t }}</h1>
+      <p class="subtitle">{{ 'patients.subtitle' | t }}</p>
     </div>
     @if (authService.hasRole(['receptionist', 'owner'])) {
       <button type="button" class="action-btn action-btn-primary" (click)="toggleAddForm()">
-        + Add patient
+        {{ 'patients.addPatient' | t }}
       </button>
     }
   </div>
 
   @if (showAddForm()) {
-    <app-modal title="Add patient" (closed)="showAddForm.set(false)">
+    <app-modal [title]="'patients.addPatientTitle' | t" (closed)="showAddForm.set(false)">
       <app-patient-form mode="add" (saved)="onPatientAdded($event)" />
     </app-modal>
   }
@@ -21,7 +21,7 @@
     <input
       type="text"
       class="search-input"
-      placeholder="Search by name or phone..."
+      [placeholder]="'patients.searchByNameOrPhone' | t"
       [formControl]="searchControl"
     />
 
@@ -30,20 +30,20 @@
       [value]="riskFilter()"
       (change)="onRiskFilterChange($any($event.target).value)"
     >
-      <option value="all">All risk levels</option>
-      <option value="low">Low risk</option>
-      <option value="medium">Medium risk</option>
-      <option value="high">High risk</option>
+      <option value="all">{{ 'appointments.allRiskLevels' | t }}</option>
+      <option value="low">{{ 'status.riskLow' | t }}</option>
+      <option value="medium">{{ 'status.riskMedium' | t }}</option>
+      <option value="high">{{ 'status.riskHigh' | t }}</option>
     </select>
   </div>
 
   <div class="panel">
     @if (loading()) {
-      <p class="empty-state">Loading patients...</p>
+      <p class="empty-state">{{ 'patients.loading' | t }}</p>
     } @else if (loadError()) {
-      <p class="empty-state empty-state-error">Couldn't load patients.</p>
+      <p class="empty-state empty-state-error">{{ 'patients.loadError' | t }}</p>
     } @else if (filteredPatients().length === 0) {
-      <p class="empty-state">No patients found.</p>
+      <p class="empty-state">{{ 'patients.noneFound' | t }}</p>
     } @else {
       <ul class="patient-list">
         @for (patient of pagedPatients(); track patient.id) {
@@ -52,7 +52,7 @@
               <span class="patient-name">{{ patient.name }}</span>
               <span class="patient-phone">{{ patient.phone }}</span>
               <span class="patient-email">{{ patient.email || '—' }}</span>
-              <span class="patient-risk">Risk score: {{ patient.noShowRiskScore }}</span>
+              <span class="patient-risk">{{ 'patients.riskScore' | t: { score: patient.noShowRiskScore } }}</span>
             </a>
           </li>
         }
@@ -61,16 +61,16 @@
       @if (totalPages() > 1) {
         <div class="pagination">
           <button type="button" class="page-btn" [disabled]="currentPage() === 1" (click)="goToPrevPage()">
-            &larr; Prev
+            <span class="rtl-mirror">&larr;</span> {{ 'common.previous' | t }}
           </button>
-          <span class="page-status">Page {{ currentPage() }} of {{ totalPages() }}</span>
+          <span class="page-status">{{ 'common.pageOf' | t: { current: currentPage(), total: totalPages() } }}</span>
           <button
             type="button"
             class="page-btn"
             [disabled]="currentPage() === totalPages()"
             (click)="goToNextPage()"
           >
-            Next &rarr;
+            {{ 'common.next' | t }} <span class="rtl-mirror">&rarr;</span>
           </button>
         </div>
       }

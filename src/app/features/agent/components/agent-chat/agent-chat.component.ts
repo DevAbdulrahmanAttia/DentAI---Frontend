@@ -5,6 +5,9 @@ import { AgentAnalyticsSnapshot, AgentHistoryMessage, AgentTool } from '@core/mo
 import { AlertItem } from '@core/models/analytics.model';
 import { AgentService } from '@features/agent/services/agent.service';
 import { PillTone, StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
+import { alertTypeInfo } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 type ChatEntry =
   | { id: number; kind: 'user'; text: string }
@@ -13,6 +16,14 @@ type ChatEntry =
   | { id: number; kind: 'agent-unavailable' }
   | { id: number; kind: 'agent-error' }
   | { id: number; kind: 'agent-analytics'; message: string; data: AgentAnalyticsSnapshot }
+  | {
+      id: number;
+      kind: 'agent-draft';
+      question: string;
+      /** null when the drafting call was unavailable — staff answer directly. */
+      text: string | null;
+      copied: boolean;
+    }
   | {
       id: number;
       kind: 'agent-action';
@@ -25,15 +36,14 @@ type ChatEntry =
     };
 
 type ActionEntry = Extract<ChatEntry, { kind: 'agent-action' }>;
+type DraftEntry = Extract<ChatEntry, { kind: 'agent-draft' }>;
 
 const HISTORY_LIMIT = 10;
-const GREETING =
-  "Hi! I can help with appointments, waitlist, patients, WhatsApp messages, and more — owners get inventory, procedures, staff, and analytics too. What would you like to do?";
 
 @Component({
   selector: 'app-agent-chat',
   standalone: true,
-  imports: [FormsModule, RouterLink, StatusPillComponent],
+  imports: [FormsModule, RouterLink, StatusPillComponent, TranslatePipe],
   templateUrl: './agent-chat.component.html',
   styleUrl: './agent-chat.component.css'
 })
@@ -41,28 +51,30 @@ export class AgentChatComponent {
   @ViewChild('scrollAnchor') private scrollAnchor?: ElementRef<HTMLDivElement>;
 
   private readonly agentService = inject(AgentService);
+  protected readonly i18n = inject(I18nService);
   private nextId = 1;
 
   protected readonly panelOpen = signal(false);
   protected readonly draft = signal('');
   protected readonly sending = signal(false);
   protected readonly entries = signal<ChatEntry[]>([
-    { id: this.nextId++, kind: 'agent-message', text: GREETING }
+    { id: this.nextId++, kind: 'agent-message', text: this.i18n.t('agent.greeting') }
   ]);
 
+  /** i18n keys, one per AgentTool — resolved in the template via the `t` pipe. */
   protected readonly toolLabels: Record<AgentTool, string> = {
-    book_appointment: 'Book appointment',
-    add_to_waitlist: 'Add to waitlist',
-    send_whatsapp_message: 'Send WhatsApp message',
-    create_patient: 'Add patient',
-    reschedule_appointment: 'Reschedule appointment',
-    cancel_appointment: 'Cancel appointment',
-    add_inventory_item: 'Add inventory item',
-    update_appointment_status: 'Update appointment status',
-    accept_waitlist_offer: 'Accept waitlist offer',
-    add_procedure_type: 'Add procedure type',
-    create_staff_account: 'Create staff account',
-    deactivate_staff_account: 'Deactivate staff account'
+    book_appointment: 'agent.tool.book_appointment',
+    add_to_waitlist: 'agent.tool.add_to_waitlist',
+    send_whatsapp_message: 'agent.tool.send_whatsapp_message',
+    create_patient: 'agent.tool.create_patient',
+    reschedule_appointment: 'agent.tool.reschedule_appointment',
+    cancel_appointment: 'agent.tool.cancel_appointment',
+    add_inventory_item: 'agent.tool.add_inventory_item',
+    update_appointment_status: 'agent.tool.update_appointment_status',
+    accept_waitlist_offer: 'agent.tool.accept_waitlist_offer',
+    add_procedure_type: 'agent.tool.add_procedure_type',
+    create_staff_account: 'agent.tool.create_staff_account',
+    deactivate_staff_account: 'agent.tool.deactivate_staff_account'
   };
 
   togglePanel(): void {
@@ -109,6 +121,15 @@ export class AgentChatComponent {
               data: reply.data
             });
             break;
+          case 'draft':
+            this.pushEntry({
+              id: this.nextId++,
+              kind: 'agent-draft',
+              question: reply.question,
+              text: reply.message,
+              copied: false
+            });
+            break;
           case 'unavailable':
             this.pushEntry({ id: this.nextId++, kind: 'agent-unavailable' });
             break;
@@ -122,15 +143,59 @@ export class AgentChatComponent {
   }
 
   confirmAction(entry: ActionEntry): void {
+    const args = this.resolveDraftArgument(entry);
+    if (!args) {
+      this.updateEntry(entry.id, {
+        status: 'error',
+        errorMessage: this.i18n.t('agent.draft.missingForSend')
+      });
+      return;
+    }
     this.updateEntry(entry.id, { status: 'confirming' });
-    this.agentService.executeAction(entry.tool, entry.arguments).subscribe({
+    this.agentService.executeAction(entry.tool, args).subscribe({
       next: (result) => this.updateEntry(entry.id, { status: 'confirmed', result }),
       error: (err: { error?: { message?: string } }) =>
         this.updateEntry(entry.id, {
           status: 'error',
-          errorMessage: err?.error?.message ?? 'Something went wrong — please try again.'
+          errorMessage: err?.error?.message ?? this.i18n.t('agent.actionFailed')
         })
     });
+  }
+
+  /**
+   * Swaps a `useDraft: true` argument for the text of the most recent drafted
+   * answer.
+   *
+   * The model is told to send drafts this way rather than copying the wording
+   * into its JSON: re-emitting a long Arabic answer as \uXXXX escapes ate
+   * the reply budget and came back truncated mid-escape, which broke the
+   * whole turn. The transcript already holds the exact text, so the client
+   * fills it in and the model never has to retype it. Returns null when there
+   * is no draft to send, so the caller can say so instead of sending nothing.
+   */
+  private resolveDraftArgument(
+    entry: ActionEntry
+  ): Record<string, unknown> | null {
+    if (entry.arguments['useDraft'] !== true) return entry.arguments;
+
+    const lastDraft = [...this.entries()]
+      .reverse()
+      .find((e): e is DraftEntry => e.kind === 'agent-draft' && !!e.text);
+    if (!lastDraft?.text) return null;
+
+    const { useDraft: _useDraft, ...rest } = entry.arguments;
+    return { ...rest, message: lastDraft.text };
+  }
+
+  /**
+   * The wording a `useDraft` send will actually put on WhatsApp, so staff
+   * confirm against the real text rather than a summary of it. Null for every
+   * other action.
+   */
+  pendingDraftText(entry: ActionEntry): string | null {
+    if (entry.arguments['useDraft'] !== true) return null;
+    const args = this.resolveDraftArgument(entry);
+    return typeof args?.['message'] === 'string' ? args['message'] : null;
   }
 
   cancelAction(entry: ActionEntry): void {
@@ -162,6 +227,18 @@ export class AgentChatComponent {
     return entry.kind === 'agent-analytics';
   }
 
+  isDraft(entry: ChatEntry): entry is DraftEntry {
+    return entry.kind === 'agent-draft';
+  }
+
+  copyDraft(entry: DraftEntry): void {
+    if (!entry.text) return;
+    void navigator.clipboard.writeText(entry.text).then(() => {
+      this.updateEntry(entry.id, { copied: true });
+      setTimeout(() => this.updateEntry(entry.id, { copied: false }), 2000);
+    });
+  }
+
   barHeight(value: number, max: number): string {
     return `${Math.max(4, Math.round((value / Math.max(1, max)) * 100))}%`;
   }
@@ -171,11 +248,11 @@ export class AgentChatComponent {
   }
 
   alertTone(type: AlertItem['type']): PillTone {
-    return type === 'near_expiry' ? 'red' : 'amber';
+    return alertTypeInfo(type).tone;
   }
 
   alertLabel(type: AlertItem['type']): string {
-    return type === 'near_expiry' ? 'Near expiry' : 'Low stock';
+    return alertTypeInfo(type).label;
   }
 
   getTempPassword(entry: ActionEntry): string | null {
@@ -203,6 +280,10 @@ export class AgentChatComponent {
       if (entry.kind === 'user') {
         history.push({ role: 'user', content: entry.text });
       } else if (entry.kind === 'agent-message' || entry.kind === 'agent-clarify') {
+        history.push({ role: 'assistant', content: entry.text });
+      } else if (entry.kind === 'agent-draft' && entry.text) {
+        // Carried so follow-ups land: "send that to Ahmed" can only become a
+        // send_whatsapp_message action if the drafted wording is in context.
         history.push({ role: 'assistant', content: entry.text });
       }
     }

@@ -7,5 +7,6 @@
 
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'auth_token',
-  USER_DATA: 'user'
+  USER_DATA: 'user',
+  LANG: 'lang'
 } as const;

@@ -4,11 +4,13 @@ import { AuthService } from '@core/services/auth.service';
 import { User, UserRole } from '@core/models/auth.model';
 import { StaffService } from '@features/staff/services/staff.service';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-staff-roster',
   standalone: true,
-  imports: [ReactiveFormsModule, StatusPillComponent],
+  imports: [ReactiveFormsModule, StatusPillComponent, TranslatePipe],
   templateUrl: './roster.component.html',
   styleUrl: './roster.component.css'
 })
@@ -16,6 +18,7 @@ export class RosterComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly staffService = inject(StaffService);
   protected readonly authService = inject(AuthService);
+  private readonly i18n = inject(I18nService);
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal(false);
@@ -65,6 +68,46 @@ export class RosterComponent implements OnInit {
     this.staffService.update(user.id, { isClinician: !this.treatsPatients(user) }).subscribe({
       next: () => {
         this.updatingId.set(null);
+        this.loadStaff();
+      },
+      error: () => {
+        this.updatingId.set(null);
+      }
+    });
+  }
+
+  /** Which dentist's consultation fee is currently being edited inline. */
+  protected readonly editingFeeId = signal<string | null>(null);
+  protected readonly feeDraft = signal<number | null>(null);
+
+  startEditingFee(user: User): void {
+    if (!user.id) return;
+    this.editingFeeId.set(user.id);
+    this.feeDraft.set(user.consultationFee != null ? Number(user.consultationFee) : null);
+  }
+
+  cancelEditingFee(): void {
+    this.editingFeeId.set(null);
+    this.feeDraft.set(null);
+  }
+
+  onFeeInput(value: string): void {
+    // An emptied box means "no fee of their own" — distinct from zero, which
+    // would be a dentist who genuinely examines for free.
+    this.feeDraft.set(value === '' ? null : Number(value));
+  }
+
+  saveFee(user: User): void {
+    if (!user.id || this.updatingId()) return;
+
+    const fee = this.feeDraft();
+    if (fee !== null && (!Number.isFinite(fee) || fee < 0)) return;
+
+    this.updatingId.set(user.id);
+    this.staffService.update(user.id, { consultationFee: fee }).subscribe({
+      next: () => {
+        this.updatingId.set(null);
+        this.cancelEditingFee();
         this.loadStaff();
       },
       error: () => {
@@ -126,7 +169,7 @@ export class RosterComponent implements OnInit {
         },
         error: (err) => {
           this.adding.set(false);
-          this.addError.set(err?.error?.message || 'Could not create this staff account.');
+          this.addError.set(err?.error?.message || this.i18n.t('staff.createFailed'));
         }
       });
   }

@@ -5,6 +5,8 @@ import { Invoice, InvoiceStatus } from '@core/models/billing.model';
 import { BillingService } from '@features/billing/services/billing.service';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
 import { invoiceStatusInfo } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 type StatusFilter = 'all' | InvoiceStatus;
 
@@ -13,13 +15,14 @@ const PAGE_SIZE = 10;
 @Component({
   selector: 'app-invoices',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, StatusPillComponent],
+  imports: [ReactiveFormsModule, RouterLink, StatusPillComponent, TranslatePipe],
   templateUrl: './invoices.component.html',
   styleUrl: './invoices.component.css'
 })
 export class InvoicesComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly billingService = inject(BillingService);
+  private readonly i18n = inject(I18nService);
 
   protected readonly invoices = signal<Invoice[]>([]);
   protected readonly loading = signal(true);
@@ -68,7 +71,7 @@ export class InvoicesComponent implements OnInit {
   }
 
   formatMoney(value: number | string): string {
-    return `EGP ${Number(value).toFixed(0)}`;
+    return `${this.i18n.t('common.egp')} ${Number(value).toFixed(0)}`;
   }
 
   /**

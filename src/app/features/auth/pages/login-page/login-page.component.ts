@@ -5,6 +5,8 @@ import { AuthService } from '@core/services/auth.service';
 import { LogoComponent } from '@shared/ui/logo/logo.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { InputFieldComponent } from '@shared/ui/input-field/input-field.component';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-login-page',
@@ -14,7 +16,8 @@ import { InputFieldComponent } from '@shared/ui/input-field/input-field.componen
     RouterLink,
     LogoComponent,
     ButtonComponent,
-    InputFieldComponent
+    InputFieldComponent,
+    TranslatePipe
   ],
   templateUrl: './login-page.html',
   styleUrl: './login-page.css'
@@ -23,6 +26,7 @@ export class LoginPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly i18n = inject(I18nService);
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -51,7 +55,7 @@ export class LoginPageComponent {
       },
       error: (err) => {
         this.loading.set(false);
-        this.errorMessage.set(err?.error?.message || err?.message || 'Authentication failed. Please check your credentials.');
+        this.errorMessage.set(err?.error?.message || err?.message || this.i18n.t('auth.loginFailed'));
       }
     });
   }

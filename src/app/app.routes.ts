@@ -102,11 +102,6 @@ export const routes: Routes = [
           import('@features/staff/pages/roster/roster.component').then((m) => m.RosterComponent)
       },
       {
-        path: 'support',
-        loadComponent: () =>
-          import('@features/support/pages/faq-assistant/faq-assistant.component').then((m) => m.FaqAssistantComponent)
-      },
-      {
         path: 'settings',
         loadComponent: () =>
           import('@features/settings/pages/settings/settings.component').then((m) => m.SettingsComponent)

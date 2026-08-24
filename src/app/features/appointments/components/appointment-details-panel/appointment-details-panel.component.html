@@ -1,7 +1,7 @@
 @if (loading()) {
-  <p class="empty-state">Loading appointment...</p>
+  <p class="empty-state">{{ 'appointments.loadingAppointment' | t }}</p>
 } @else if (loadError() || !appointment()) {
-  <p class="empty-state empty-state-error">Couldn't load this appointment.</p>
+  <p class="empty-state empty-state-error">{{ 'appointments.loadAppointmentError' | t }}</p>
 } @else {
   @let appt = appointment()!;
 
@@ -12,42 +12,42 @@
     </div>
     <div class="pills">
       @if (appt.riskLevel) {
-        <app-status-pill [tone]="riskLevelInfo(appt.riskLevel).tone" [label]="riskLevelInfo(appt.riskLevel).label" />
+        <app-status-pill [tone]="riskLevelInfo(appt.riskLevel).tone" [label]="riskLevelInfo(appt.riskLevel).label | t" />
       }
       <app-status-pill
         [tone]="appointmentStatusInfo(appt.status).tone"
-        [label]="appointmentStatusInfo(appt.status).label"
+        [label]="appointmentStatusInfo(appt.status).label | t"
       />
     </div>
   </div>
 
   <div class="detail-grid">
     <div class="detail-item">
-      <span class="detail-label">Doctor</span>
-      <span class="detail-value">{{ appt.doctor.name || 'Unassigned' }}</span>
+      <span class="detail-label">{{ 'appointments.doctor' | t }}</span>
+      <span class="detail-value">{{ appt.doctor.name || ('appointments.unassigned' | t) }}</span>
     </div>
     <div class="detail-item">
-      <span class="detail-label">Procedure</span>
+      <span class="detail-label">{{ 'appointments.procedure' | t }}</span>
       <span class="detail-value">{{ appt.procedureType.name }}</span>
     </div>
     <div class="detail-item">
-      <span class="detail-label">Duration</span>
-      <span class="detail-value">{{ appt.procedureType.estDurationMin }} min</span>
+      <span class="detail-label">{{ 'appointments.duration' | t }}</span>
+      <span class="detail-value">{{ appt.procedureType.estDurationMin }} {{ 'common.minutes' | t }}</span>
     </div>
     <div class="detail-item">
-      <span class="detail-label">Price</span>
+      <span class="detail-label">{{ 'appointments.price' | t }}</span>
       <span class="detail-value">{{ formatPrice(appt.finalPrice) }}</span>
     </div>
     <div class="detail-item">
-      <span class="detail-label">Patient phone</span>
+      <span class="detail-label">{{ 'appointments.patientPhone' | t }}</span>
       <span class="detail-value">{{ appt.patient.phone }}</span>
     </div>
     <div class="detail-item">
-      <span class="detail-label">Predicted no-show risk</span>
-      <span class="detail-value">{{ appt.riskScore !== null ? appt.riskScore + '%' : 'Unscored' }}</span>
+      <span class="detail-label">{{ 'appointments.predictedNoShowRisk' | t }}</span>
+      <span class="detail-value">{{ appt.riskScore !== null ? appt.riskScore + '%' : ('status.riskUnscored' | t) }}</span>
     </div>
     <div class="detail-item">
-      <span class="detail-label">Patient no-show history</span>
+      <span class="detail-label">{{ 'appointments.patientNoShowHistory' | t }}</span>
       <span class="detail-value">{{ appt.patient.noShowRiskScore }}%</span>
     </div>
   </div>
@@ -56,10 +56,10 @@
     <div class="ai-explain">
       @if (riskExplanation() === undefined) {
         <button type="button" class="link-btn" [disabled]="riskExplanationLoading()" (click)="explainRisk()">
-          {{ riskExplanationLoading() ? 'Thinking...' : 'Why this risk level? (AI)' }}
+          {{ riskExplanationLoading() ? ('appointments.thinking' | t) : ('appointments.whyThisRisk' | t) }}
         </button>
       } @else if (riskExplanation() === null) {
-        <p class="ai-unavailable">AI explanations aren't available right now.</p>
+        <p class="ai-unavailable">{{ 'appointments.aiUnavailable' | t }}</p>
       } @else {
         <p class="ai-explanation">{{ riskExplanation() }}</p>
       }
@@ -69,30 +69,41 @@
   <!-- Visit lifecycle: check-in -> start (readiness-gated) -> complete -->
   @if (appt.status === 'booked' || appt.status === 'in_progress') {
     <div class="visit-section">
-      <h2 class="section-title">Visit</h2>
+      <h2 class="section-title">{{ 'appointments.visit' | t }}</h2>
 
       <div class="visit-timeline">
         <span class="visit-step" [class.visit-step-done]="appt.arrivedAt">
-          Arrived: {{ appt.arrivedAt ? formatTime(appt.arrivedAt) : '—' }}
+          {{ 'appointments.arrived' | t }}: {{ appt.arrivedAt ? formatTime(appt.arrivedAt) : '—' }}
           @if (lateByMinutes(); as late) {
-            <span class="late-badge">{{ late }} min late</span>
+            <span class="late-badge">{{ 'appointments.minutesLate' | t: { count: late } }}</span>
           }
         </span>
         <span class="visit-step" [class.visit-step-done]="appt.actualStartAt">
-          Started: {{ appt.actualStartAt ? formatTime(appt.actualStartAt) : '—' }}
+          {{ 'appointments.started' | t }}: {{ appt.actualStartAt ? formatTime(appt.actualStartAt) : '—' }}
         </span>
-        <span class="visit-step">Booked for {{ appt.durationMin }} min</span>
+        <span class="visit-step">
+          {{ 'appointments.bookedFor' | t: { minutes: appt.durationMin } }}
+          @if (durationVsCatalogue(); as d) {
+            <span
+              class="learned-badge"
+              [class.learned-badge-longer]="d.longer"
+              [title]="'appointments.learnedDurationHint' | t: { booked: d.booked, declared: d.declared }"
+            >
+              {{ 'appointments.learnedFromVisits' | t: { declared: d.declared } }}
+            </span>
+          }
+        </span>
       </div>
 
       @if (appt.status === 'booked') {
         @if (readinessLoading()) {
-          <p class="readiness-loading">Checking materials and medical history...</p>
+          <p class="readiness-loading">{{ 'appointments.checkingReadiness' | t }}</p>
         } @else if (readiness(); as r) {
           <div class="readiness" [class.readiness-blocked]="!r.canStart">
             <div class="readiness-head">
-              <span class="readiness-title">Pre-procedure check</span>
+              <span class="readiness-title">{{ 'appointments.preProcedureCheck' | t }}</span>
               @if (r.requiresAnesthesia) {
-                <app-status-pill tone="amber" label="Uses anesthesia" />
+                <app-status-pill tone="amber" [label]="'appointments.usesAnesthesia' | t" />
               }
             </div>
 
@@ -106,12 +117,12 @@
                   <div class="medical-warning">
                     <app-status-pill
                       [tone]="medicalSeverityInfo(w.severity).tone"
-                      [label]="medicalSeverityInfo(w.severity).label"
+                      [label]="medicalSeverityInfo(w.severity).label | t"
                     />
                     <span class="medical-warning-text">
                       {{ w.name }}
                       @if (w.anesthesiaRelevant && r.requiresAnesthesia) {
-                        <strong> — affects anesthesia</strong>
+                        <strong> {{ 'appointments.affectsAnesthesia' | t }}</strong>
                       }
                       @if (w.notes) {
                         <span class="medical-warning-note"> ({{ w.notes }})</span>
@@ -129,8 +140,8 @@
                     <span>{{ m.name }}</span>
                     <span class="material-qty">
                       {{ m.inStock }} / {{ m.required }} {{ m.unit }}
-                      @if (m.expired) { <strong>EXPIRED</strong> }
-                      @else if (!m.sufficient) { <strong>SHORT</strong> }
+                      @if (m.expired) { <strong>{{ 'appointments.expired' | t }}</strong> }
+                      @else if (!m.sufficient) { <strong>{{ 'appointments.short' | t }}</strong> }
                     </span>
                   </li>
                 }
@@ -150,7 +161,7 @@
                   [checked]="acknowledged()"
                   (change)="acknowledged.set(!acknowledged())"
                 />
-                <span>I have reviewed the warnings above</span>
+                <span>{{ 'appointments.acknowledgeWarnings' | t }}</span>
               </label>
             }
           </div>
@@ -169,7 +180,7 @@
             [disabled]="lifecycleBusy()"
             (click)="checkIn()"
           >
-            Check in
+            {{ 'appointments.checkIn' | t }}
           </button>
         }
 
@@ -184,7 +195,7 @@
             "
             (click)="startVisit()"
           >
-            Start procedure
+            {{ 'appointments.startProcedure' | t }}
           </button>
         }
 
@@ -195,7 +206,7 @@
             [disabled]="lifecycleBusy()"
             (click)="completeVisit()"
           >
-            Complete
+            {{ 'appointments.complete' | t }}
           </button>
           @for (minutes of extensionChoices; track minutes) {
             <button
@@ -204,7 +215,7 @@
               [disabled]="lifecycleBusy()"
               (click)="extendVisit(minutes)"
             >
-              +{{ minutes }} min
+              {{ 'appointments.extendMinutes' | t: { minutes } }}
             </button>
           }
         }
@@ -214,23 +225,32 @@
 
   @if (appt.status === 'done' && appt.actualStartAt) {
     <div class="visit-section">
-      <h2 class="section-title">Visit record</h2>
+      <h2 class="section-title">{{ 'appointments.visitRecord' | t }}</h2>
       <div class="visit-timeline">
         @if (appt.arrivedAt) {
           <span class="visit-step visit-step-done">
-            Arrived {{ formatTime(appt.arrivedAt) }}
+            {{ 'appointments.arrived' | t }} {{ formatTime(appt.arrivedAt) }}
             @if (lateByMinutes(); as late) {
-              <span class="late-badge">{{ late }} min late</span>
+              <span class="late-badge">{{ 'appointments.minutesLate' | t: { count: late } }}</span>
             }
           </span>
         }
-        <span class="visit-step visit-step-done">Started {{ formatTime(appt.actualStartAt) }}</span>
+        <span class="visit-step visit-step-done">{{ 'appointments.started' | t }} {{ formatTime(appt.actualStartAt) }}</span>
         @if (appt.actualEndAt) {
-          <span class="visit-step visit-step-done">Ended {{ formatTime(appt.actualEndAt) }}</span>
+          <span class="visit-step visit-step-done">{{ 'appointments.ended' | t }} {{ formatTime(appt.actualEndAt) }}</span>
         }
         @if (actualDurationMinutes(); as actual) {
           <span class="visit-step">
-            Took {{ actual }} min (booked {{ appt.durationMin }})
+            {{ 'appointments.took' | t: { actual, booked: appt.durationMin } }}
+            @if (durationVsCatalogue(); as d) {
+              <span
+                class="learned-badge"
+                [class.learned-badge-longer]="d.longer"
+                [title]="'appointments.learnedDurationHint' | t: { booked: d.booked, declared: d.declared }"
+              >
+                {{ 'appointments.learnedFromVisits' | t: { declared: d.declared } }}
+              </span>
+            }
           </span>
         }
       </div>
@@ -239,9 +259,9 @@
 
   @if (appt.status === 'done') {
     <div class="visit-section">
-      <h2 class="section-title">Invoice</h2>
+      <h2 class="section-title">{{ 'appointments.invoice' | t }}</h2>
       @if (invoiceLoading()) {
-        <p class="empty-state">Loading invoice...</p>
+        <p class="empty-state">{{ 'billing.loadingInvoice' | t }}</p>
       } @else if (invoice(); as inv) {
         <div class="invoice-summary">
           <a [routerLink]="['/dashboard/billing', inv.invoice.id]" class="invoice-link">
@@ -249,16 +269,16 @@
           </a>
           <app-status-pill
             [tone]="invoiceStatusInfo(inv.invoice.status).tone"
-            [label]="invoiceStatusInfo(inv.invoice.status).label"
+            [label]="invoiceStatusInfo(inv.invoice.status).label | t"
           />
-          <span class="invoice-total">EGP {{ inv.totals.total.toFixed(0) }}</span>
+          <span class="invoice-total">{{ 'common.egp' | t }} {{ inv.totals.total.toFixed(0) }}</span>
         </div>
       } @else if (authService.hasRole(['receptionist', 'owner'])) {
         <button type="button" class="action-btn action-btn-checkin" [disabled]="invoiceCreating()" (click)="createInvoice()">
-          {{ invoiceCreating() ? 'Creating...' : 'Create invoice' }}
+          {{ invoiceCreating() ? ('appointments.creatingInvoice' | t) : ('appointments.createInvoice' | t) }}
         </button>
       } @else {
-        <p class="empty-state">No invoice yet.</p>
+        <p class="empty-state">{{ 'appointments.noInvoiceYet' | t }}</p>
       }
     </div>
   }
@@ -270,16 +290,16 @@
   @if (appt.status === 'booked' && authService.hasRole(['receptionist', 'doctor', 'owner'])) {
     <div class="actions">
       <button type="button" class="action-btn action-btn-done" [disabled]="updating()" (click)="updateStatus('done')">
-        Mark done
+        {{ 'appointments.markDone' | t }}
       </button>
       <button type="button" class="action-btn action-btn-noshow" [disabled]="updating()" (click)="updateStatus('no_show')">
-        Mark no-show
+        {{ 'appointments.markNoShow' | t }}
       </button>
       <button type="button" class="action-btn action-btn-cancel" [disabled]="updating()" (click)="updateStatus('cancelled')">
-        Cancel
+        {{ 'common.cancel' | t }}
       </button>
       <button type="button" class="action-btn action-btn-reschedule" (click)="toggleReschedule()">
-        {{ showReschedule() ? 'Cancel reschedule' : 'Reschedule' }}
+        {{ showReschedule() ? ('appointments.cancelReschedule' | t) : ('appointments.reschedule' | t) }}
       </button>
     </div>
 
@@ -287,11 +307,11 @@
       <form class="reschedule-form" [formGroup]="rescheduleForm" (ngSubmit)="submitReschedule()">
         <div class="reschedule-row">
           <div class="field">
-            <label for="reschedule-date">New date</label>
+            <label for="reschedule-date">{{ 'appointments.newDate' | t }}</label>
             <input id="reschedule-date" type="date" formControlName="date" class="native-input" />
           </div>
           <div class="field">
-            <label for="reschedule-time">New time</label>
+            <label for="reschedule-time">{{ 'appointments.newTime' | t }}</label>
             <input id="reschedule-time" type="time" formControlName="time" class="native-input" />
           </div>
         </div>
@@ -301,18 +321,18 @@
         }
 
         <button type="submit" class="submit-btn" [disabled]="rescheduling()">
-          {{ rescheduling() ? 'Rescheduling...' : 'Confirm new time' }}
+          {{ rescheduling() ? ('appointments.rescheduling' | t) : ('appointments.confirmNewTime' | t) }}
         </button>
       </form>
     }
   }
 
   <div class="reminders-section">
-    <h2 class="section-title">Reminders</h2>
+    <h2 class="section-title">{{ 'appointments.reminders' | t }}</h2>
     @if (remindersLoading()) {
-      <p class="empty-state">Loading reminders...</p>
+      <p class="empty-state">{{ 'appointments.loadingReminders' | t }}</p>
     } @else if (reminders().length === 0) {
-      <p class="empty-state">No reminders queued for this appointment.</p>
+      <p class="empty-state">{{ 'appointments.noRemindersQueued' | t }}</p>
     } @else {
       <ul class="reminder-list">
         @for (reminder of reminders(); track reminder.id) {
@@ -321,7 +341,7 @@
             <span class="reminder-time">{{ formatDateTime(reminder.sendAt) }}</span>
             <app-status-pill
               [tone]="reminderStatusInfo(reminder.status).tone"
-              [label]="reminderStatusInfo(reminder.status).label"
+              [label]="reminderStatusInfo(reminder.status).label | t"
             />
           </li>
         }

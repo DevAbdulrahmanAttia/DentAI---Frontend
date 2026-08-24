@@ -1,7 +1,7 @@
 <div class="page">
   <div class="page-header">
-    <h1>Analytics</h1>
-    <p class="subtitle">Clinic performance at a glance.</p>
+    <h1>{{ 'analytics.title' | t }}</h1>
+    <p class="subtitle">{{ 'analytics.subtitle' | t }}</p>
   </div>
 
   <div class="date-range-bar">
@@ -13,66 +13,66 @@
           [class.preset-btn-active]="selectedPreset() === preset.value"
           (click)="selectPreset(preset.value)"
         >
-          {{ preset.label }}
+          {{ preset.labelKey | t }}
         </button>
       }
     </div>
     @if (selectedPreset() === 'custom') {
       <div class="custom-range">
         <input type="date" [ngModel]="customFrom()" (ngModelChange)="customFrom.set($event)" />
-        <span class="custom-range-sep">to</span>
+        <span class="custom-range-sep">{{ 'analytics.to' | t }}</span>
         <input type="date" [ngModel]="customTo()" (ngModelChange)="customTo.set($event)" />
         <button type="button" class="apply-btn" [disabled]="!customFrom() || !customTo()" (click)="applyCustomRange()">
-          Apply
+          {{ 'common.apply' | t }}
         </button>
       </div>
     }
-    @if (rangeLabel()) {
-      <span class="range-label">Showing: {{ rangeLabel() }}</span>
+    @if (rangeLabel(); as range) {
+      <span class="range-label">{{ 'analytics.showing' | t: { range } }}</span>
     }
   </div>
 
   <div class="kpi-grid">
     @if (kpisLoading()) {
-      <p class="empty-state">Loading KPIs...</p>
+      <p class="empty-state">{{ 'analytics.loadingKpis' | t }}</p>
     } @else if (kpisError() || !kpis()) {
-      <p class="empty-state empty-state-error">Couldn't load KPIs.</p>
+      <p class="empty-state empty-state-error">{{ 'analytics.loadKpisError' | t }}</p>
     } @else {
       @let k = kpis()!;
       <div class="kpi-card">
-        <span class="kpi-label">Revenue (paid invoices)</span>
-        <span class="kpi-value">EGP {{ k.revenue }}</span>
+        <span class="kpi-label">{{ 'analytics.revenuePaid' | t }}</span>
+        <span class="kpi-value">{{ 'common.egp' | t }} {{ k.revenue }}</span>
       </div>
       <div class="kpi-card kpi-card-warn">
-        <span class="kpi-label">Outstanding balance</span>
-        <span class="kpi-value">EGP {{ k.outstandingBalance }}</span>
+        <span class="kpi-label">{{ 'analytics.outstandingBalance' | t }}</span>
+        <span class="kpi-value">{{ 'common.egp' | t }} {{ k.outstandingBalance }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Average invoice value</span>
-        <span class="kpi-value">EGP {{ k.averageInvoiceValue }}</span>
+        <span class="kpi-label">{{ 'analytics.avgInvoiceValue' | t }}</span>
+        <span class="kpi-value">{{ 'common.egp' | t }} {{ k.averageInvoiceValue }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Completed appointments</span>
+        <span class="kpi-label">{{ 'analytics.completedAppointments' | t }}</span>
         <span class="kpi-value">{{ k.doneCount }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">No-show rate</span>
+        <span class="kpi-label">{{ 'analytics.noShowRate' | t }}</span>
         <span class="kpi-value">{{ k.noShowRate }}%</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Avg appointments/day</span>
+        <span class="kpi-label">{{ 'analytics.avgAppointmentsPerDay' | t }}</span>
         <span class="kpi-value">{{ k.avgAppointmentsPerDay }}</span>
       </div>
       <div class="kpi-card kpi-card-warn">
-        <span class="kpi-label">Active alerts</span>
+        <span class="kpi-label">{{ 'analytics.activeAlerts' | t }}</span>
         <span class="kpi-value">{{ k.activeAlertsCount }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Slots recovered</span>
+        <span class="kpi-label">{{ 'analytics.slotsRecovered' | t }}</span>
         <span class="kpi-value">{{ k.slotRecovery.recoveredCount }}</span>
       </div>
       <div class="kpi-card">
-        <span class="kpi-label">Waitlist fill rate</span>
+        <span class="kpi-label">{{ 'analytics.waitlistFillRate' | t }}</span>
         <span class="kpi-value">{{ k.slotRecovery.fillRate }}%</span>
       </div>
     }
@@ -80,13 +80,13 @@
 
   <div class="panels">
     <section class="panel">
-      <h2 class="section-title">Revenue trend</h2>
+      <h2 class="section-title">{{ 'analytics.revenueTrend' | t }}</h2>
       @if (trendLoading()) {
-        <p class="empty-state">Loading...</p>
+        <p class="empty-state">{{ 'analytics.loading' | t }}</p>
       } @else if (trendError()) {
-        <p class="empty-state empty-state-error">Couldn't load revenue trend.</p>
+        <p class="empty-state empty-state-error">{{ 'analytics.loadTrendError' | t }}</p>
       } @else if (revenueTrend().length === 0) {
-        <p class="empty-state">No completed appointments yet.</p>
+        <p class="empty-state">{{ 'analytics.noCompletedAppointments' | t }}</p>
       } @else {
         <div class="bar-chart">
           @for (point of revenueTrend(); track point.period) {
@@ -103,16 +103,16 @@
     </section>
 
     <section class="panel">
-      <h2 class="section-title">No-show risk distribution</h2>
+      <h2 class="section-title">{{ 'analytics.noShowDistribution' | t }}</h2>
       @if (noShowLoading()) {
-        <p class="empty-state">Loading...</p>
+        <p class="empty-state">{{ 'analytics.loading' | t }}</p>
       } @else if (noShowError() || !noShowInsights()) {
-        <p class="empty-state empty-state-error">Couldn't load no-show insights.</p>
+        <p class="empty-state empty-state-error">{{ 'analytics.loadNoShowError' | t }}</p>
       } @else {
         <div class="risk-bars">
           @for (entry of riskDistributionEntries(); track entry[0]) {
             <div class="risk-row">
-              <app-status-pill [tone]="riskTone(entry[0])" [label]="entry[0]" />
+              <app-status-pill [tone]="riskTone(entry[0])" [label]="riskLabelKey(entry[0]) | t" />
               <div class="risk-track">
                 <div
                   class="risk-fill"
@@ -130,28 +130,28 @@
 
   <section class="panel">
     <h2 class="section-title">
-      Profit by procedure
+      {{ 'analytics.profitByProcedure' | t }}
       @if (rangeLabel()) {
         <span class="section-scope">{{ rangeLabel() }}</span>
       }
     </h2>
     @if (profitLoading()) {
-      <p class="empty-state">Loading...</p>
+      <p class="empty-state">{{ 'analytics.loading' | t }}</p>
     } @else if (profitError()) {
-      <p class="empty-state empty-state-error">Couldn't load profit breakdown.</p>
+      <p class="empty-state empty-state-error">{{ 'analytics.loadProfitError' | t }}</p>
     } @else if (profitByProcedure().length === 0) {
-      <p class="empty-state">No completed appointments yet.</p>
+      <p class="empty-state">{{ 'analytics.noCompletedAppointments' | t }}</p>
     } @else {
       <div class="table-wrap">
         <table class="profit-table">
           <thead>
             <tr>
-              <th>Procedure</th>
-              <th>Count</th>
-              <th>Revenue</th>
-              <th>Cost</th>
-              <th>Profit</th>
-              <th>Margin</th>
+              <th>{{ 'analytics.procedure' | t }}</th>
+              <th>{{ 'analytics.count' | t }}</th>
+              <th>{{ 'analytics.revenue' | t }}</th>
+              <th>{{ 'analytics.cost' | t }}</th>
+              <th>{{ 'analytics.profit' | t }}</th>
+              <th>{{ 'analytics.margin' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -159,9 +159,9 @@
               <tr>
                 <td>{{ entry.name }}</td>
                 <td>{{ entry.appointmentCount }}</td>
-                <td>EGP {{ entry.revenue }}</td>
-                <td>EGP {{ entry.totalCost }}</td>
-                <td [class.profit-negative]="entry.profit < 0">EGP {{ entry.profit }}</td>
+                <td>{{ 'common.egp' | t }} {{ entry.revenue }}</td>
+                <td>{{ 'common.egp' | t }} {{ entry.totalCost }}</td>
+                <td [class.profit-negative]="entry.profit < 0">{{ 'common.egp' | t }} {{ entry.profit }}</td>
                 <td>{{ entry.marginPercent }}%</td>
               </tr>
             }
@@ -173,25 +173,25 @@
 
   <section class="panel">
     <h2 class="section-title">
-      Top doctors by revenue
+      {{ 'analytics.topDoctorsByRevenue' | t }}
       @if (rangeLabel()) {
         <span class="section-scope">{{ rangeLabel() }}</span>
       }
     </h2>
     @if (topDoctorsLoading()) {
-      <p class="empty-state">Loading...</p>
+      <p class="empty-state">{{ 'analytics.loading' | t }}</p>
     } @else if (topDoctorsError()) {
-      <p class="empty-state empty-state-error">Couldn't load top doctors.</p>
+      <p class="empty-state empty-state-error">{{ 'analytics.loadTopDoctorsError' | t }}</p>
     } @else if (topDoctors().length === 0) {
-      <p class="empty-state">No paid invoices yet.</p>
+      <p class="empty-state">{{ 'analytics.noPaidInvoicesYet' | t }}</p>
     } @else {
       <div class="table-wrap">
         <table class="profit-table">
           <thead>
             <tr>
-              <th>Doctor</th>
-              <th>Paid invoices</th>
-              <th>Revenue</th>
+              <th>{{ 'common.doctor' | t }}</th>
+              <th>{{ 'analytics.paidInvoices' | t }}</th>
+              <th>{{ 'analytics.revenue' | t }}</th>
             </tr>
           </thead>
           <tbody>
@@ -199,7 +199,7 @@
               <tr>
                 <td>{{ entry.name }}</td>
                 <td>{{ entry.appointmentCount }}</td>
-                <td>EGP {{ entry.revenue }}</td>
+                <td>{{ 'common.egp' | t }} {{ entry.revenue }}</td>
               </tr>
             }
           </tbody>
@@ -210,18 +210,18 @@
 
   <div class="panels">
     <section class="panel">
-      <h2 class="section-title">Alerts</h2>
+      <h2 class="section-title">{{ 'analytics.alerts' | t }}</h2>
       @if (alertsLoading()) {
-        <p class="empty-state">Loading...</p>
+        <p class="empty-state">{{ 'analytics.loading' | t }}</p>
       } @else if (alertsError()) {
-        <p class="empty-state empty-state-error">Couldn't load alerts.</p>
+        <p class="empty-state empty-state-error">{{ 'analytics.loadAlertsError' | t }}</p>
       } @else if (alerts().length === 0) {
-        <p class="empty-state">No active alerts.</p>
+        <p class="empty-state">{{ 'topbar.noAlerts' | t }}</p>
       } @else {
         <ul class="alert-list">
           @for (alert of alerts(); track alert.itemId + alert.type) {
             <li class="alert-row">
-              <app-status-pill [tone]="alertTone(alert.type)" [label]="alertLabel(alert.type)" />
+              <app-status-pill [tone]="alertTone(alert.type)" [label]="alertLabel(alert.type) | t" />
               <div class="alert-meta">
                 <span class="alert-name">{{ alert.itemName }}</span>
                 <span class="alert-detail">{{ alert.detail }}</span>
@@ -233,15 +233,15 @@
     </section>
 
     <section class="panel">
-      <h2 class="section-title">Revenue forecast</h2>
+      <h2 class="section-title">{{ 'analytics.revenueForecast' | t }}</h2>
       @if (forecastLoading()) {
-        <p class="empty-state">Loading...</p>
+        <p class="empty-state">{{ 'analytics.loading' | t }}</p>
       } @else if (forecastUnavailable()) {
-        <p class="empty-state empty-state-error">Forecast service is currently unavailable.</p>
+        <p class="empty-state empty-state-error">{{ 'analytics.forecastUnavailable' | t }}</p>
       } @else if (forecast()) {
         @let f = forecast()!;
         @if (f.insufficientData) {
-          <p class="empty-state">Not enough history yet to forecast.</p>
+          <p class="empty-state">{{ 'analytics.notEnoughHistory' | t }}</p>
         } @else {
           <div class="bar-chart">
             @for (point of f.history; track 'h-' + point.period) {
@@ -266,7 +266,7 @@
               </div>
             }
           </div>
-          <p class="hint">Lighter bars are projected periods.</p>
+          <p class="hint">{{ 'analytics.lighterBarsProjected' | t }}</p>
         }
       }
     </section>

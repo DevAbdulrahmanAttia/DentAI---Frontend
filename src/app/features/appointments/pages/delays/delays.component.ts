@@ -1,4 +1,11 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  computed,
+  inject,
+  signal
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Appointment } from '@core/models/appointment.model';
 import {
@@ -9,6 +16,8 @@ import {
 import { AppointmentsService } from '@features/appointments/services/appointments.service';
 import { DelayManagementService } from '@features/appointments/services/delay-management.service';
 import { StaffService } from '@features/staff/services/staff.service';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 interface TimelineBlock {
   appointment: Appointment;
@@ -19,20 +28,36 @@ interface TimelineBlock {
   /** Percent offset/width within the rendered working-hours window. */
   leftPct: number;
   widthPct: number;
+  /** Pre-formatted for the block label, e.g. "09:00 – 09:40". */
+  startLabel: string;
+  endLabel: string;
 }
 
-const TIMELINE_START_HOUR = 8;
-const TIMELINE_END_HOUR = 22;
+/**
+ * Fallback frame when the doctor has nothing booked. The real frame is derived
+ * from the day's own appointments — a fixed 08:00-22:00 window squeezed a
+ * 09:00-18:00 clinic into a third of the width and left the rest empty, which
+ * made every block too small to read and every gap impossible to judge.
+ */
+const DEFAULT_START_HOUR = 9;
+const DEFAULT_END_HOUR = 18;
+
+/** Never render a frame narrower than this, so one lone visit can't fill the day. */
+const MIN_WINDOW_HOURS = 4;
+
+/** How often the "now" marker re-renders. */
+const NOW_TICK_MS = 30_000;
 
 @Component({
   selector: 'app-delays-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './delays.component.html',
   styleUrl: './delays.component.css'
 })
-export class DelaysComponent implements OnInit {
+export class DelaysComponent implements OnInit, OnDestroy {
   private readonly delayService = inject(DelayManagementService);
+  protected readonly i18n = inject(I18nService);
   private readonly appointmentsService = inject(AppointmentsService);
   private readonly staffService = inject(StaffService);
 
@@ -45,6 +70,14 @@ export class DelaysComponent implements OnInit {
   protected readonly timelineAppointments = signal<Appointment[]>([]);
   protected readonly actionBusyId = signal<string | null>(null);
   protected readonly actionError = signal('');
+
+  /**
+   * Drives the "now" marker. The delay figures are recomputed server-side on
+   * every load, but the marker has to keep moving between loads or the
+   * timeline looks frozen while you are presenting from it.
+   */
+  private readonly now = signal(Date.now());
+  private nowTimer?: ReturnType<typeof setInterval>;
 
   /**
    * Visits the cascade has pushed past the doctor's finish time. Surfaced as
@@ -61,16 +94,79 @@ export class DelaysComponent implements OnInit {
     return map;
   });
 
-  protected readonly timelineBlocks = computed<TimelineBlock[]>(() => {
-    const delays = this.delayByAppointmentId();
-    return this.timelineAppointments().map((appt) => ({
-      appointment: appt,
-      delayMin: delays.get(appt.id) ?? 0,
-      isCurrent: appt.status === 'in_progress',
-      lateFinishMin: this.lateFinishMin(appt),
-      ...this.timelinePosition(appt)
+  /**
+   * The hour range actually drawn, derived from the day rather than fixed.
+   *
+   * Floors to the hour before the first visit and ceils to the hour after the
+   * last one ends, so the frame is only ever as wide as the day really is.
+   */
+  protected readonly timelineWindow = computed<{ startHour: number; endHour: number }>(() => {
+    const appointments = this.timelineAppointments();
+    if (appointments.length === 0) {
+      return { startHour: DEFAULT_START_HOUR, endHour: DEFAULT_END_HOUR };
+    }
+
+    let earliest = Number.POSITIVE_INFINITY;
+    let latest = Number.NEGATIVE_INFINITY;
+    for (const appt of appointments) {
+      const start = new Date(appt.scheduledAt);
+      const startHour = start.getHours() + start.getMinutes() / 60;
+      earliest = Math.min(earliest, startHour);
+      latest = Math.max(latest, startHour + appt.durationMin / 60);
+    }
+
+    let startHour = Math.floor(earliest);
+    let endHour = Math.ceil(latest);
+    // Widen symmetrically rather than from one side, so a short day still
+    // sits in the middle of the frame instead of hugging an edge.
+    while (endHour - startHour < MIN_WINDOW_HOURS) {
+      if (startHour > 0) startHour--;
+      if (endHour - startHour < MIN_WINDOW_HOURS && endHour < 24) endHour++;
+    }
+    return { startHour, endHour };
+  });
+
+  protected readonly timelineHours = computed<{ hour: number; leftPct: number }[]>(() => {
+    const { startHour, endHour } = this.timelineWindow();
+    const span = endHour - startHour;
+    return Array.from({ length: span + 1 }, (_, i) => ({
+      hour: startHour + i,
+      leftPct: (i / span) * 100
     }));
   });
+
+  /** Percent position of the current time, or null when it falls outside the frame. */
+  protected readonly nowPct = computed<number | null>(() => {
+    const { startHour, endHour } = this.timelineWindow();
+    const now = new Date(this.now());
+    const hours = now.getHours() + now.getMinutes() / 60;
+    if (hours < startHour || hours > endHour) return null;
+    return ((hours - startHour) / (endHour - startHour)) * 100;
+  });
+
+  protected readonly nowLabel = computed(() => this.clock(new Date(this.now())));
+
+  protected readonly timelineBlocks = computed<TimelineBlock[]>(() => {
+    const delays = this.delayByAppointmentId();
+    return this.timelineAppointments().map((appt) => {
+      const start = new Date(appt.scheduledAt);
+      const end = new Date(start.getTime() + appt.durationMin * 60000);
+      return {
+        appointment: appt,
+        delayMin: delays.get(appt.id) ?? 0,
+        isCurrent: appt.status === 'in_progress',
+        lateFinishMin: this.lateFinishMin(appt),
+        startLabel: this.clock(start),
+        endLabel: this.clock(end),
+        ...this.timelinePosition(appt)
+      };
+    });
+  });
+
+  private clock(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
 
   /** Minutes a finished visit ran past its own scheduled end — purely historical, never feeds the forward-looking KPIs/cascade above. */
   private lateFinishMin(appt: Appointment): number {
@@ -80,12 +176,8 @@ export class DelaysComponent implements OnInit {
     return Math.max(0, Math.round((actualEndMs - scheduledEndMs) / 60000));
   }
 
-  protected readonly timelineHours = Array.from(
-    { length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1 },
-    (_, i) => TIMELINE_START_HOUR + i
-  );
-
   ngOnInit(): void {
+    this.nowTimer = setInterval(() => this.now.set(Date.now()), NOW_TICK_MS);
     this.staffService.list().subscribe({
       next: (users) => {
         const doctors = users
@@ -100,6 +192,10 @@ export class DelaysComponent implements OnInit {
       },
       error: () => this.loadAll()
     });
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.nowTimer);
   }
 
   selectDoctor(id: string): void {
@@ -119,13 +215,13 @@ export class DelaysComponent implements OnInit {
       },
       error: (err: { error?: { message?: string } }) => {
         this.actionBusyId.set(null);
-        this.actionError.set(err?.error?.message ?? 'Could not record that action.');
+        this.actionError.set(err?.error?.message ?? this.i18n.t('delays.actionFailed'));
       }
     });
   }
 
   formatTime(iso: string): string {
-    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleTimeString(this.i18n.intlLocale(), { hour: '2-digit', minute: '2-digit' });
   }
 
   private loadAll(): void {
@@ -166,15 +262,16 @@ export class DelaysComponent implements OnInit {
   }
 
   private timelinePosition(appt: Appointment): { leftPct: number; widthPct: number } {
-    const windowStart = new Date();
-    windowStart.setHours(TIMELINE_START_HOUR, 0, 0, 0);
-    const windowMs = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 3600_000;
+    const { startHour, endHour } = this.timelineWindow();
+    const windowStart = new Date(appt.scheduledAt);
+    windowStart.setHours(startHour, 0, 0, 0);
+    const windowMs = (endHour - startHour) * 3600_000;
 
     const startMs = new Date(appt.scheduledAt).getTime() - windowStart.getTime();
     const widthMs = appt.durationMin * 60000;
 
     const leftPct = Math.max(0, Math.min(100, (startMs / windowMs) * 100));
-    const widthPct = Math.max(1.5, Math.min(100 - leftPct, (widthMs / windowMs) * 100));
+    const widthPct = Math.max(2, Math.min(100 - leftPct, (widthMs / windowMs) * 100));
     return { leftPct, widthPct };
   }
 

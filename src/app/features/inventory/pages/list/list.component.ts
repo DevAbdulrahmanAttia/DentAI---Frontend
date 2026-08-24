@@ -8,13 +8,15 @@ import { InventoryItemFormComponent } from '@features/inventory/components/inven
 import { ModalComponent } from '@shared/ui/modal/modal.component';
 import { StatusPillComponent } from '@shared/ui/status-pill/status-pill.component';
 import { stockStatusInfo } from '@shared/utils/status-maps';
+import { I18nService } from '@core/i18n/i18n.service';
+import { TranslatePipe } from '@core/i18n/translate.pipe';
 
 type CategoryFilter = 'all' | InventoryCategory;
 
 @Component({
   selector: 'app-inventory-list',
   standalone: true,
-  imports: [ReactiveFormsModule, InventoryItemFormComponent, ModalComponent, StatusPillComponent],
+  imports: [ReactiveFormsModule, InventoryItemFormComponent, ModalComponent, StatusPillComponent, TranslatePipe],
   templateUrl: './list.component.html',
   styleUrl: './list.component.css'
 })
@@ -23,6 +25,7 @@ export class ListComponent implements OnInit {
   private readonly inventoryService = inject(InventoryService);
   private readonly route = inject(ActivatedRoute);
   protected readonly authService = inject(AuthService);
+  private readonly i18n = inject(I18nService);
 
   protected readonly searchControl = this.fb.control('');
   protected readonly items = signal<InventoryItem[]>([]);
@@ -78,11 +81,11 @@ export class ListComponent implements OnInit {
   }
 
   deleteItem(item: InventoryItem): void {
-    if (!confirm(`Delete "${item.name}" from inventory? This can't be undone.`)) return;
+    if (!confirm(this.i18n.t('inventory.confirmDelete', { name: item.name }))) return;
 
     this.inventoryService.deleteItem(item.id).subscribe({
       next: () => this.items.update((current) => current.filter((i) => i.id !== item.id)),
-      error: () => alert(`Couldn't delete "${item.name}". It may already be referenced by logged usage.`)
+      error: () => alert(this.i18n.t('inventory.deleteFailed', { name: item.name }))
     });
   }
 

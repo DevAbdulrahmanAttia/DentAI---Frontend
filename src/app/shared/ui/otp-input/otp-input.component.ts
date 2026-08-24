@@ -1,5 +1,6 @@
-import { Component, forwardRef, signal, ElementRef, viewChildren } from '@angular/core';
+import { Component, forwardRef, inject, signal, ElementRef, viewChildren } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { I18nService } from '@core/i18n/i18n.service';
 
 @Component({
   selector: 'app-otp-input',
@@ -12,7 +13,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     }
   ],
   template: `
-    <div class="otp-row" role="group" aria-label="One-time password">
+    <div class="otp-row" role="group" [attr.aria-label]="i18n.t('auth.otpAriaLabel')">
       @for (digit of digits(); track $index; let index = $index) {
         <input
           #otpInput
@@ -66,6 +67,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   `]
 })
 export class OtpInputComponent implements ControlValueAccessor {
+  protected readonly i18n = inject(I18nService);
+
   inputElements = viewChildren<ElementRef<HTMLInputElement>>('otpInput');
   
   digits = signal<string[]>(Array(6).fill(''));
